@@ -33,12 +33,18 @@ ol.source.TiledWMS = function(options) {
     urls = ol.TileUrlFunction.expandUrl(options.url);
   }
 
+  /**
+   * @private
+   * @type {Object}
+   */
+  this.params_ = options.params;
+
   if (goog.isDef(urls)) {
     var tileUrlFunctions = goog.array.map(
         urls, function(url) {
           return ol.TileUrlFunction.createFromParamsFunction(
-              url, options.params, ol.source.wms.getUrl);
-        });
+              url, this.params_, ol.source.wms.getUrl);
+        }, this);
     tileUrlFunction = ol.TileUrlFunction.createFromTileUrlFunctions(
         tileUrlFunctions);
   }
@@ -96,6 +102,25 @@ ol.source.TiledWMS = function(options) {
 };
 goog.inherits(ol.source.TiledWMS, ol.source.ImageTileSource);
 
+/**
+ * Get the user-provided params, i.e. those passed to the constructor through
+ * the "params", and possibly updated using the updateParams method.
+ *
+ * @return {Object} Params.
+ */
+ol.source.TiledWMS.prototype.getParams = function() {
+  return this.params_;
+};
+
+/**
+ * Update the user-provided params, i.e. those passed to the constructor through
+ * the "params". 
+ *
+ * @param {Object} newParams Object containing KVP of parameters to modify.
+ */
+ol.source.TiledWMS.prototype.updateParams = function(newParams) {
+  goog.object.extend(this.params_, newParams);
+};
 
 /**
  * @inheritDoc
