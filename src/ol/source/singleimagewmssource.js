@@ -17,9 +17,16 @@ goog.require('ol.source.wms');
  * @param {ol.source.SingleImageWMSOptions} options Options.
  */
 ol.source.SingleImageWMS = function(options) {
+
+  /**
+   * @private
+   * @type {Object}
+   */
+  this.params_ = options.params;
+
   var imageUrlFunction = goog.isDef(options.url) ?
       ol.ImageUrlFunction.createFromParamsFunction(
-          options.url, options.params, ol.source.wms.getUrl) :
+          options.url, this.params_, ol.source.wms.getUrl) :
       ol.ImageUrlFunction.nullImageUrlFunction;
 
   goog.base(this, {
@@ -53,6 +60,27 @@ ol.source.SingleImageWMS = function(options) {
 
 };
 goog.inherits(ol.source.SingleImageWMS, ol.source.ImageSource);
+
+
+/**
+ * Get the user-provided params, i.e. those passed to the constructor through
+ * the "params", and possibly updated using the updateParams method.
+ *
+ * @return {Object} Params.
+ */
+ol.source.SingleImageWMS.prototype.getParams = function() {
+  return this.params_;
+};
+
+/**
+ * Update the user-provided params, i.e. those passed to the constructor through
+ * the "params". 
+ *
+ * @param {Object} newParams Object containing KVP of parameters to modify.
+ */
+ol.source.SingleImageWMS.prototype.updateParams = function(newParams) {
+  goog.object.extend(this.params_, newParams);
+};
 
 
 /**
