@@ -47,13 +47,13 @@ ol.source.WMTS = function(options) {
   // we could issue a getCapabilities xhr to retrieve missing configuration
   var tileGrid = options.tileGrid;
 
-  var context = {
+  this.context = {
     'Layer': options.layer,
     'style': options.style,
     'Style': options.style,
     'TileMatrixSet': options.matrixSet
   };
-  goog.object.extend(context, dimensions);
+  goog.object.extend(this.context, dimensions);
   var kvpParams;
   if (requestEncoding == ol.source.WMTSRequestEncoding.KVP) {
     kvpParams = {
@@ -65,7 +65,7 @@ ol.source.WMTS = function(options) {
       'TileRow': '{TileRow}',
       'TileCol': '{TileCol}'
     };
-    goog.object.extend(kvpParams, context);
+    goog.object.extend(kvpParams, this.context);
   }
 
   /**
@@ -88,7 +88,7 @@ ol.source.WMTS = function(options) {
               'TileRow': tileCoord.y
             };
             if (requestEncoding != ol.source.WMTSRequestEncoding.KVP) {
-              goog.object.extend(localContext, context);
+              goog.object.extend(localContext, this.context);
             }
             var url = template;
             for (var key in localContext) {
@@ -165,6 +165,23 @@ ol.source.WMTS = function(options) {
 };
 goog.inherits(ol.source.WMTS, ol.source.ImageTileSource);
 
+/**
+ * Get the values of the custom parameters of the GetTile request
+ *
+ * @return {Object} Params.
+ */
+ol.source.WMTS.prototype.getContext = function() {
+  return this.context;
+};
+
+/**
+ * Modify some of the custom parameters of the GetTile request
+ *
+ * @param {Object} newParams Object containing KVP of parameters to modify.
+ */
+ol.source.WMTS.prototype.updateContext = function(newParams) {
+  goog.object.extend(this.context, newParams);
+};
 
 /**
  * @param {Object} wmtsCap An object representing the capabilities document.
