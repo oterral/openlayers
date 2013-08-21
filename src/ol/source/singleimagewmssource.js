@@ -79,7 +79,7 @@ ol.source.SingleImageWMS.prototype.getParams = function() {
  * @param {Object} params Object containing KVP of parameters to modify.
  */
 ol.source.SingleImageWMS.prototype.updateParams = function(params) {
-  goog.object.extend(this.params_, newParams);
+  goog.object.extend(this.params_, params);
 };
 
 
