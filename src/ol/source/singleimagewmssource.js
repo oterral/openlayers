@@ -64,7 +64,7 @@ goog.inherits(ol.source.SingleImageWMS, ol.source.ImageSource);
 
 /**
  * Get the user-provided params, i.e. those passed to the constructor through
- * the "params", and possibly updated using the updateParams method.
+ * the "params" option, and possibly updated using the updateParams method.
  *
  * @return {Object} Params.
  */
@@ -74,11 +74,11 @@ ol.source.SingleImageWMS.prototype.getParams = function() {
 
 /**
  * Update the user-provided params, i.e. those passed to the constructor through
- * the "params". 
+ * the "params" option. 
  *
- * @param {Object} newParams Object containing KVP of parameters to modify.
+ * @param {Object} params Object containing KVP of parameters to modify.
  */
-ol.source.SingleImageWMS.prototype.updateParams = function(newParams) {
+ol.source.SingleImageWMS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, newParams);
 };
 
