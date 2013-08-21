@@ -47,16 +47,20 @@ ol.source.WMTS = function(options) {
   // we could issue a getCapabilities xhr to retrieve missing configuration
   var tileGrid = options.tileGrid;
 
-  this.context = {
+  /**
+   * @private
+   * @type {Object}
+   */
+  this.params_ = {
     'Layer': options.layer,
     'style': options.style,
     'Style': options.style,
     'TileMatrixSet': options.matrixSet
   };
-  goog.object.extend(this.context, dimensions);
-  var kvpParams;
+  goog.object.extend(this.params_, dimensions);
+  
   if (requestEncoding == ol.source.WMTSRequestEncoding.KVP) {
-    kvpParams = {
+    var kvpParams = {
       'Service': 'WMTS',
       'Request': 'GetTile',
       'Version': version,
@@ -65,7 +69,7 @@ ol.source.WMTS = function(options) {
       'TileRow': '{TileRow}',
       'TileCol': '{TileCol}'
     };
-    goog.object.extend(kvpParams, this.context);
+    goog.object.extend(this.params_, kvpParams);
   }
 
   /**
@@ -86,9 +90,9 @@ ol.source.WMTS = function(options) {
               'TileMatrix': tileGrid.getMatrixId(tileCoord.z),
               'TileCol': tileCoord.x,
               'TileRow': tileCoord.y
-            };
+            }; 
             if (requestEncoding != ol.source.WMTSRequestEncoding.KVP) {
-              goog.object.extend(localContext, this.context);
+              goog.object.extend(localContext, this.params_);
             }
             var url = template;
             for (var key in localContext) {
@@ -109,14 +113,14 @@ ol.source.WMTS = function(options) {
   if (goog.isDef(urls)) {
     tileUrlFunction = ol.TileUrlFunction.createFromTileUrlFunctions(
         goog.array.map(urls, function(url) {
-          if (goog.isDef(kvpParams)) {
+          if (requestEncoding == ol.source.WMTSRequestEncoding.KVP) {
             // TODO: we may want to create our own appendParams function
             // so that params order conforms to wmts spec guidance,
             // and so that we can avoid to escape special template params
-            url = goog.uri.utils.appendParamsFromMap(url, kvpParams);
+            url = goog.uri.utils.appendParamsFromMap(url, this.params_);
           }
           return createFromWMTSTemplate(url);
-        }));
+        }, this));
   }
 
   var tmpExtent = ol.extent.createEmpty();
@@ -170,17 +174,17 @@ goog.inherits(ol.source.WMTS, ol.source.ImageTileSource);
  *
  * @return {Object} Params.
  */
-ol.source.WMTS.prototype.getContext = function() {
-  return this.context;
+ol.source.WMTS.prototype.getParams = function() {
+  return this.params_;
 };
 
 /**
  * Modify some of the custom parameters of the GetTile request
  *
- * @param {Object} newParams Object containing KVP of parameters to modify.
+ * @param {Object} params Object containing KVP of parameters to modify.
  */
-ol.source.WMTS.prototype.updateContext = function(newParams) {
-  goog.object.extend(this.context, newParams);
+ol.source.WMTS.prototype.updateParams = function(params) {
+  goog.object.extend(this.params_, params);
 };
 
 /**
