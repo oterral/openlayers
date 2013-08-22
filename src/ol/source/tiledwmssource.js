@@ -130,6 +130,14 @@ ol.source.TiledWMS.prototype.updateParams = function(params) {
 /**
  * @inheritDoc
  */
+ol.source.TiledWMS.prototype.getKeyZXY = function(z, x, y) {
+  return [goog.object.getValues(this.params_).join(''), z, x, y].join('/');
+};
+
+
+/**
+ * @inheritDoc
+ */
 ol.source.TiledWMS.prototype.getFeatureInfoForPixel =
     function(pixel, map, success, opt_error) {
   var coord = map.getCoordinateFromPixel(pixel),
