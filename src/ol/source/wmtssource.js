@@ -185,6 +185,14 @@ ol.source.WMTS.prototype.getParams = function() {
  */
 ol.source.WMTS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, params);
+  this.dispatchChangeEvent();
+};
+
+/**
+ * @inheritdoc
+ */
+ol.source.WMTS.prototype.getKeyZXY = function(z, x, y) {
+  return [goog.object.getValues(this.params_).join(''), z, x, y].join('/');
 };
 
 /**

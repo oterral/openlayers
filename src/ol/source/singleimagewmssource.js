@@ -80,6 +80,8 @@ ol.source.SingleImageWMS.prototype.getParams = function() {
  */
 ol.source.SingleImageWMS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, params);
+  this.image_ = null;
+  this.dispatchChangeEvent();
 };
 
 

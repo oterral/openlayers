@@ -120,6 +120,7 @@ ol.source.TiledWMS.prototype.getParams = function() {
  */
 ol.source.TiledWMS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, params);
+  this.dispatchChangeEvent();
 };
 
 /**
