@@ -1,6 +1,7 @@
 goog.provide('ol.source.SingleImageWMS');
 
 goog.require('goog.asserts');
+goog.require('goog.object');
 goog.require('ol.Image');
 goog.require('ol.ImageUrlFunction');
 goog.require('ol.extent');
@@ -72,9 +73,10 @@ ol.source.SingleImageWMS.prototype.getParams = function() {
   return this.params_;
 };
 
+
 /**
  * Update the user-provided params, i.e. those passed to the constructor through
- * the "params" option. 
+ * the "params" option.
  *
  * @param {Object} params Object containing KVP of parameters to modify.
  */

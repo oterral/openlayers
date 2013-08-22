@@ -58,7 +58,7 @@ ol.source.WMTS = function(options) {
     'TileMatrixSet': options.matrixSet
   };
   goog.object.extend(this.params_, dimensions);
-  
+
   if (requestEncoding == ol.source.WMTSRequestEncoding.KVP) {
     var kvpParams = {
       'Service': 'WMTS',
@@ -90,7 +90,7 @@ ol.source.WMTS = function(options) {
               'TileMatrix': tileGrid.getMatrixId(tileCoord.z),
               'TileCol': tileCoord.x,
               'TileRow': tileCoord.y
-            }; 
+            };
             if (requestEncoding != ol.source.WMTSRequestEncoding.KVP) {
               goog.object.extend(localContext, this.params_);
             }
@@ -169,6 +169,7 @@ ol.source.WMTS = function(options) {
 };
 goog.inherits(ol.source.WMTS, ol.source.ImageTileSource);
 
+
 /**
  * Get the values of the custom parameters of the GetTile request
  *
@@ -177,6 +178,7 @@ goog.inherits(ol.source.WMTS, ol.source.ImageTileSource);
 ol.source.WMTS.prototype.getParams = function() {
   return this.params_;
 };
+
 
 /**
  * Modify some of the custom parameters of the GetTile request
@@ -188,12 +190,14 @@ ol.source.WMTS.prototype.updateParams = function(params) {
   this.dispatchChangeEvent();
 };
 
+
 /**
- * @inheritdoc
+ * @inheritDoc
  */
 ol.source.WMTS.prototype.getKeyZXY = function(z, x, y) {
   return [goog.object.getValues(this.params_).join(''), z, x, y].join('/');
 };
+
 
 /**
  * @param {Object} wmtsCap An object representing the capabilities document.

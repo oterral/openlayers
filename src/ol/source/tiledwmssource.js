@@ -5,6 +5,7 @@ goog.provide('ol.source.TiledWMS');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.math');
+goog.require('goog.object');
 goog.require('ol.TileCoord');
 goog.require('ol.TileUrlFunction');
 goog.require('ol.extent');
@@ -102,6 +103,7 @@ ol.source.TiledWMS = function(options) {
 };
 goog.inherits(ol.source.TiledWMS, ol.source.ImageTileSource);
 
+
 /**
  * Get the user-provided params, i.e. those passed to the constructor through
  * the "params" option, and possibly updated using the updateParams method.
@@ -112,9 +114,10 @@ ol.source.TiledWMS.prototype.getParams = function() {
   return this.params_;
 };
 
+
 /**
  * Update the user-provided params, i.e. those passed to the constructor through
- * the "params" option. 
+ * the "params" option.
  *
  * @param {Object} params Object containing KVP of parameters to modify.
  */
@@ -122,6 +125,7 @@ ol.source.TiledWMS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, params);
   this.dispatchChangeEvent();
 };
+
 
 /**
  * @inheritDoc
