@@ -404,6 +404,16 @@
  */
 
 /**
+ * @typedef {Object} olx.interaction.ModifyOptions
+ * @property {undefined|Array.<ol.layer.Layer>|function(ol.layer.Layer):boolean} layers
+ *     Layers or filter function to restrict modification to a subset of layers.
+ * @property {number|undefined} pixelTolerance Pixel tolerance for considering
+ *     the pointer close enough to a vertex for editing. Default is 20 pixels.
+ * @property {ol.feature.StyleFunction|undefined} styleFunction Style function.
+ * @todo stability experimental
+ */
+
+/**
  * @typedef {Object} olx.interaction.MouseWheelZoomOptions
  * @property {number|undefined} duration Animation duration in milliseconds. Default is `250`.
  * @todo stability experimental
