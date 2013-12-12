@@ -11,6 +11,42 @@ ol.xml.Parser;
 
 
 /**
+ * @param {Node} node Node.
+ * @param {boolean} normalizeWhitespace Normalize whitespace.
+ * @return {string} All text content.
+ */
+ol.xml.getAllTextContent = function(node, normalizeWhitespace) {
+  return ol.xml.getAllTextContent_(node, normalizeWhitespace, []).join('');
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {boolean} normalizeWhitespace Normalize whitespace.
+ * @param {Array.<String|string>} accumulator Accumulator.
+ * @private
+ * @return {Array.<String|string>} Accumulator.
+ */
+ol.xml.getAllTextContent_ = function(node, normalizeWhitespace, accumulator) {
+  if (node.nodeType == goog.dom.NodeType.CDATA_SECTION ||
+      node.nodeType == goog.dom.NodeType.TEXT) {
+    if (normalizeWhitespace) {
+      // FIXME understand why goog.dom.getTextContent_ uses String here
+      accumulator.push(String(node.nodeValue).replace(/(\r\n|\r|\n)/g, ''));
+    } else {
+      accumulator.push(node.nodeValue);
+    }
+  } else {
+    var n;
+    for (n = node.firstChild; !goog.isNull(n); n = n.nextSibling) {
+      ol.xml.getAllTextContent_(n, normalizeWhitespace, accumulator);
+    }
+  }
+  return accumulator;
+};
+
+
+/**
  * @param {function(this: S, Node): T|ol.xml.Parser} value Value.
  * @param {Node} node Node.
  * @param {S=} opt_obj Scope.
