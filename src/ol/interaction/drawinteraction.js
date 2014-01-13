@@ -247,9 +247,25 @@ ol.interaction.Draw.prototype.handleMapBrowserEvent = function(event) {
   } else if (event.type === ol.MapBrowserEvent.EventType.MOUSEMOVE) {
     pass = this.handleMove_(event);
   } else if (event.type === ol.MapBrowserEvent.EventType.DBLCLICK) {
-    pass = false;
+    pass = this.handleDblClick_(event);
   }
   return pass;
+};
+
+
+/**
+ * Handle double click events.
+ * @param {ol.MapBrowserEvent} event A double click event.
+ * @return {boolean} Pass the event to other interactions.
+ * @private
+ */
+ol.interaction.Draw.prototype.handleDblClick_ = function(event) {
+  if (this.mode_ === ol.interaction.DrawMode.POLYGON &&
+      this.sketchFeature_ &&
+      !this.atFinish_(event)) {
+    this.finishCoordinate_ = event.getCoordinate();
+  }
+  return false;
 };
 
 
@@ -314,7 +330,7 @@ ol.interaction.Draw.prototype.atFinish_ = function(event) {
       potentiallyDone = geometry.getCoordinates().length > 2;
     } else if (this.mode_ === ol.interaction.DrawMode.POLYGON) {
       goog.asserts.assertInstanceof(geometry, ol.geom.Polygon);
-      potentiallyDone = geometry.getCoordinates()[0].length > 3;
+      potentiallyDone = geometry.getCoordinates()[0].length > 2;
     }
     if (potentiallyDone) {
       var map = event.map;
@@ -440,6 +456,7 @@ ol.interaction.Draw.prototype.addToDrawing_ = function(event) {
 ol.interaction.Draw.prototype.finishDrawing_ = function(event) {
   var sketchFeature = this.abortDrawing_();
   goog.asserts.assert(!goog.isNull(sketchFeature));
+
   var coordinates;
   var geometry = sketchFeature.getGeometry();
   if (this.mode_ === ol.interaction.DrawMode.POINT) {
@@ -453,6 +470,11 @@ ol.interaction.Draw.prototype.finishDrawing_ = function(event) {
     geometry.setCoordinates(coordinates);
   } else if (this.mode_ === ol.interaction.DrawMode.POLYGON) {
     goog.asserts.assertInstanceof(geometry, ol.geom.Polygon);
+    // WHen we close the polygon on dblclick, the last coordinate is
+    // duplicated as for LineString so we force the replacement by
+    // the first point
+    this.sketchRawPolygon_[0].pop();
+    this.sketchRawPolygon_[0].push(this.sketchRawPolygon_[0][0]);
     coordinates = geometry.getCoordinates();
     // force clockwise order for exterior ring
     sketchFeature.setGeometry(new ol.geom.Polygon(coordinates));
