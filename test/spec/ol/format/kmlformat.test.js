@@ -948,6 +948,41 @@ describe('ol.format.KML', function() {
         expect(fillStyle).to.be.an(ol.style.Fill);
         expect(fillStyle.getColor()).to.eql([0x78, 0x56, 0x34, 0x12 / 255]);
       });
+      it('can apply a shared style map to a feature', function() {
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Document>' +
+            '    <StyleMap id="foo">' +
+            '      <Pair>' +
+            '        <key>normal</key>' +
+            '        <styleUrl>#foo2</styleUrl>' +
+            '      </Pair>' +
+            '    </StyleMap>' +
+            '    <Style id="foo2">' +
+            '      <PolyStyle>' +
+            '        <color>12345678</color>' +
+            '      </PolyStyle>' +
+            '    </Style>' +
+            '    <Placemark>' +
+            '      <styleUrl>#foo</styleUrl>' +
+            '    </Placemark>' +
+            '  </Document>' +
+            '</kml>';
+        var fs = format.readFeatures(text);
+        expect(fs).to.have.length(1);
+        var f = fs[0];
+        expect(f).to.be.an(ol.Feature);
+        var styleFunction = f.getStyleFunction();
+        expect(styleFunction).not.to.be(undefined);
+        var styleArray = styleFunction.call(f, 0);
+        expect(styleArray).to.be.an(Array);
+        expect(styleArray).to.have.length(1);
+        var style = styleArray[0];
+        expect(style).to.be.an(ol.style.Style);
+        var fillStyle = style.getFill();
+        expect(fillStyle).to.be.an(ol.style.Fill);
+        expect(fillStyle.getColor()).to.eql([0x78, 0x56, 0x34, 0x12 / 255]);
+      });
 
       it('can read a shared style from a Folder', function() {
         var text =

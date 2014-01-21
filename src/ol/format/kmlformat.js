@@ -1511,7 +1511,12 @@ ol.format.KML.prototype.readSharedStyle_ = function(node, objectStack) {
     var style = ol.format.KML.readStyle_(node, objectStack);
     if (goog.isDef(style)) {
       var baseURI = goog.isNull(node.baseURI) ? '' : node.baseURI;
-      this.sharedStyles_[baseURI + '#' + id] = [style];
+      var styleUri = baseURI + '#' + id;
+      if (goog.isArray(this.sharedStyles_[styleUri])) {
+        this.sharedStyles_[styleUri].push(style);
+      } else {
+        this.sharedStyles_[styleUri] = [style];
+      }
     }
   }
 };
@@ -1547,7 +1552,9 @@ ol.format.KML.prototype.readSharedStyleMap_ = function(node, objectStack) {
       } else {
         styleUri = goog.Uri.resolve(baseURI, styleUrl).toString();
       }
-      goog.asserts.assert(styleUri in this.sharedStyles_);
+      if (!(styleUri in this.sharedStyles_)) {
+        this.sharedStyles_[styleUri] = [];
+      }
       this.sharedStyles_[baseURI + '#' + id] = this.sharedStyles_[styleUri];
     }
   }
