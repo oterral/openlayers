@@ -21,7 +21,8 @@ var styleArray = [new ol.style.Style({
   }),
   stroke: new ol.style.Stroke({
     color: '#ffcc33',
-    width: 2
+    width: 2,
+    lineDash: [8]
   }),
   image: new ol.style.Circle({
     radius: 7,
@@ -56,7 +57,10 @@ var draw; // global so we can remove it later
 function addInteraction() {
   draw = new ol.interaction.Draw({
     source: source,
-    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
+    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value),
+    styleFunction: function(feature, resolution) {
+      return styleArray;
+    }
   });
   map.addInteraction(draw);
 }
