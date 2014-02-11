@@ -8,6 +8,7 @@ goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.object');
 goog.require('goog.vec.Mat4');
+goog.require('ol.BrowserFeature');
 goog.require('ol.color');
 goog.require('ol.extent');
 goog.require('ol.geom.flat');
@@ -636,9 +637,14 @@ ol.render.canvas.Immediate.prototype.setContextStrokeState_ =
     function(strokeState) {
   var context = this.context_;
   var contextStrokeState = this.contextStrokeState_;
+  var lineDash;
   if (goog.isNull(contextStrokeState)) {
     context.lineCap = strokeState.lineCap;
-    context.lineDash = strokeState.lineDash;
+    if (ol.BrowserFeature.HAS_CANVAS_LINE_DASH) {
+      lineDash = !goog.isNull(strokeState.lineDash) ?
+          strokeState.lineDash : ol.render.canvas.defaultLineDash;
+      context.setLineDash(lineDash);
+    }
     context.lineJoin = strokeState.lineJoin;
     context.lineWidth = strokeState.lineWidth;
     context.miterLimit = strokeState.miterLimit;
@@ -655,8 +661,11 @@ ol.render.canvas.Immediate.prototype.setContextStrokeState_ =
     if (contextStrokeState.lineCap != strokeState.lineCap) {
       contextStrokeState.lineCap = context.lineCap = strokeState.lineCap;
     }
-    if (contextStrokeState.lineDash != strokeState.lineDash) {
-      contextStrokeState.lineDash = context.lineDash = strokeState.lineDash;
+    if (ol.BrowserFeature.HAS_CANVAS_LINE_DASH &&
+        contextStrokeState.lineDash !== strokeState.lineDash) {
+      lineDash = !goog.isNull(strokeState.lineDash) ?
+          strokeState.lineDash : ol.render.canvas.defaultLineDash;
+      context.setLineDash(contextStrokeState.lineDash = lineDash);
     }
     if (contextStrokeState.lineJoin != strokeState.lineJoin) {
       contextStrokeState.lineJoin = context.lineJoin = strokeState.lineJoin;
