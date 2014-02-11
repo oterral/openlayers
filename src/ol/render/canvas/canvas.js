@@ -96,3 +96,24 @@ ol.render.canvas.defaultTextBaseline = 'middle';
  * @type {number}
  */
 ol.render.canvas.defaultLineWidth = 1;
+
+
+/**
+ * @param {Array.<number>} lineDash Line dash.
+ * @return {!Array.<number>} Line dash.
+ */
+ol.render.canvas.copyLineDash = function(lineDash) {
+  if (goog.isNull(lineDash) || lineDash.length === 0) {
+    // Re-use an existing object to avoid generating garbage
+    return ol.render.canvas.emptyLineDash;
+  } else {
+    return lineDash.slice();
+  }
+};
+
+
+/**
+ * @type {!Array.<number>}
+ * @const
+ */
+ol.render.canvas.emptyLineDash = [];
