@@ -120,11 +120,30 @@ ol.source.TileImage.prototype.getTile =
 
 
 /**
+ * @return {ol.TileLoadFunctionType} TileLoadFunction
+ * @todo stability experimental
+ */
+ol.source.TileImage.prototype.getTileLoadFunction = function() {
+  return this.tileLoadFunction;
+};
+
+
+/**
  * @return {ol.TileUrlFunctionType} TileUrlFunction
  * @todo stability experimental
  */
 ol.source.TileImage.prototype.getTileUrlFunction = function() {
   return this.tileUrlFunction;
+};
+
+
+/**
+ * @param {ol.TileLoadFunctionType} tileLoadFunction Tile load function.
+ */
+ol.source.TileImage.prototype.setTileLoadFunction = function(tileLoadFunction) {
+  this.tileCache.clear();
+  this.tileLoadFunction = tileLoadFunction;
+  this.dispatchChangeEvent();
 };
 
 
