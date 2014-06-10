@@ -13,6 +13,7 @@ goog.require('goog.object');
 goog.require('goog.string');
 goog.require('ol.Feature');
 goog.require('ol.array');
+goog.require('ol.color');
 goog.require('ol.feature');
 goog.require('ol.format.XMLFeature');
 goog.require('ol.format.XSD');
@@ -1642,9 +1643,61 @@ ol.format.KML.prototype.readProjectionFromNode = function(node) {
 /**
  * @param {Node} node Node to append a TextNode with the boolean to.
  * @param {boolean} bool Boolean.
+ * @private
  */
-ol.format.KML.writeBooleanTextNode = function(node, bool) {
+ol.format.KML.writeBooleanTextNode_ = function(node, bool) {
   ol.format.XSD.writeStringTextNode(node, (bool) ? '1' : '0');
+};
+
+
+/**
+ * @param {Node} node Node to append a TextNode with the color to.
+ * @param {ol.Color|string} color Color.
+ * @private
+ */
+ol.format.KML.writeColorTextNode_ = function(node, color) {
+  ol.format.XSD.writeStringTextNode(node, ol.color.asString(color));
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {Object} icon Icon object.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeIcon_ = function(node, icon, objectStack) {
+  // goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+  // goog.asserts.assert(node.localName == 'Icon');
+  // var iconObject = ol.xml.pushParseAndPop(
+  //     {}, ol.format.KML.ICON_PARSERS_, node, objectStack);
+  // if (goog.isDef(iconObject)) {
+  //   return iconObject;
+  // } else {
+  //   return null;
+  // }
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.style.Icon} iconStyle Icon style.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeIconStyle_ = function(node, iconStyle, objectStack) {
+  window.console.debug('style');
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.style.Style} style style.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeLineStyle_ = function(node, style, objectStack) {
+  window.console.debug('strokeStyle');
 };
 
 
@@ -1665,12 +1718,137 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
   if (goog.isDefAndNotNull(geometry)) {
     goog.object.set(properties, 'geometry', geometry);
   }
+  var style_ = feature.getStyle();
+  if (goog.isDefAndNotNull(style_)) {
+    var style;
+    if (goog.isFunction(style_)) {
+      style_ = style_.call(feature, 0);
+    }
+    if (style_ instanceof ol.style.Style) {
+      style = style_;
+    } else if (goog.isArray(style_)) {
+      style = style_[0];
+    }
+    goog.asserts.assertInstanceof(style, ol.style.Style);
+    //goog.object.set(properties, 'Style', style);
+  }
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.PLACEMARK_SEQUENCE_[parentNode.namespaceURI];
   var values = ol.xml.makeSequence(properties, orderedKeys);
   ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ (context),
       ol.format.KML.PLACEMARK_SERIALIZERS_, ol.xml.OBJECT_PROPERTY_NODE_FACTORY,
       values, objectStack, orderedKeys);
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.style.Style} style Style.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writePolyStyle_ = function(node, style, objectStack) {
+  window.console.debug('polyStyle');
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ * @return {Array.<ol.style.Style>} Style.
+ */
+// ol.format.KML.readStyle_ = function(node, objectStack) {
+//   goog.asserts.assert(node.nodeType == goog.dom.NodeType.ELEMENT);
+//   goog.asserts.assert(node.localName == 'Style');
+//   var styleObject = ol.xml.pushParseAndPop(
+//       {}, ol.format.KML.STYLE_PARSERS_, node, objectStack);
+//   if (!goog.isDef(styleObject)) {
+//     return null;
+//   }
+//   var fillStyle = /** @type {ol.style.Fill} */ (goog.object.get(
+//       styleObject, 'fillStyle', ol.format.KML.DEFAULT_FILL_STYLE_));
+//   var fill = /** @type {boolean|undefined} */
+//       (goog.object.get(styleObject, 'fill'));
+//   if (goog.isDef(fill) && !fill) {
+//     fillStyle = null;
+//   }
+//   var imageStyle = /** @type {ol.style.Image} */ (goog.object.get(
+//       styleObject, 'imageStyle', ol.format.KML.DEFAULT_IMAGE_STYLE_));
+//   var strokeStyle = /** @type {ol.style.Stroke} */ (goog.object.get(
+//       styleObject, 'strokeStyle', ol.format.KML.DEFAULT_STROKE_STYLE_));
+//   var outline = /** @type {boolean|undefined} */
+//       (goog.object.get(styleObject, 'outline'));
+//   if (goog.isDef(outline) && !outline) {
+//     strokeStyle = null;
+//   }
+//   return [new ol.style.Style({
+//     fill: fillStyle,
+//     image: imageStyle,
+//     stroke: strokeStyle,
+//     text: null, // FIXME
+//     zIndex: undefined // FIXME
+//   })];
+// };
+
+
+/**
+ * @param {Node} node Node to append a TextNode with the scale to.
+ * @param {number|undefined} scale Scale.
+ * @private
+ */
+ol.format.KML.writeScaleTextNode_ = function(node, scale) {
+  // var number = ol.format.XSD.readDecimal(node);
+  // if (goog.isDef(number)) {
+  //   return Math.sqrt(number);
+  // } else {
+  //   return undefined;
+  // }
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.style.Style} style Style.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeStyle_ = function(node, style, objectStack) {
+  window.console.debug('style');
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {string} uri URI.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeURI_ = function(node, uri, objectStack) {
+  // var s = ol.xml.getAllTextContent(node, false);
+  // if (goog.isDefAndNotNull(node.baseURI)) {
+  //   return goog.Uri.resolve(node.baseURI, goog.string.trim(s)).toString();
+  // } else {
+  //   return goog.string.trim(s);
+  // }
+};
+
+
+/**
+ * @param {Node} node Node to append a TextNode with the Vec2 to.
+ * @param {ol.format.KMLVec2_} vec2 Vec2.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeVec2_ = function(node, vec2, objectStack) {
+  // var xunits = node.getAttribute('xunits');
+  // var yunits = node.getAttribute('yunits');
+  // return {
+  //   x: parseFloat(node.getAttribute('x')),
+  //   xunits: ol.format.KML.ICON_ANCHOR_UNITS_MAP_[xunits],
+  //   y: parseFloat(node.getAttribute('y')),
+  //   yunits: ol.format.KML.ICON_ANCHOR_UNITS_MAP_[yunits]
+  // };
 };
 
 
@@ -1698,7 +1876,7 @@ ol.format.KML.DOCUMENT_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       //'Folder': ol.xml.makeChildAppender(
       //    ol.format.KML.writeDocumentOrFolder_),
-      //'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_),
+      'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
       //'Style': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyle_),
       //'StyleMap': ol.xml.makeChildAppender(
       //    ol.format.KML.writeSharedStyleMap_)
@@ -1706,14 +1884,13 @@ ol.format.KML.DOCUMENT_SERIALIZERS_ = ol.xml.makeStructureNS(
 
 
 /**
-
  * @const
  * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
  * @private
  */
 ol.format.KML.FOLDER_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
-      //'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_),
+      'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
       //'Style': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyle_),
       //'StyleMap': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyleMap_)
     });
@@ -1724,10 +1901,90 @@ ol.format.KML.FOLDER_SERIALIZERS_ = ol.xml.makeStructureNS(
  * @type {Object.<string, Array.<string>>}
  * @private
  */
+ol.format.KML.ICON_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'href'
+    ],
+    ol.xml.makeStructureNS(
+    ol.format.KML.GX_NAMESPACE_URIS_, [
+          'x', 'y', 'w', 'h'
+    ]));
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.ICON_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'href': ol.xml.makeChildAppender(ol.format.KML.writeURI_)
+    }, ol.xml.makeStructureNS(
+        ol.format.KML.GX_NAMESPACE_URIS_, {
+          'x': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode),
+          'y': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode),
+          'w': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode),
+          'h': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode)
+        }));
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.Icon_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'Icon', 'heading', 'hotSpot', 'scale'
+    ]);
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.ICON_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'Icon': ol.xml.makeChildAppender(ol.format.KML.writeIcon_),
+      'heading': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode),
+      'hotSpot': ol.xml.makeChildAppender(ol.format.KML.writeVec2_),
+      'scale': ol.xml.makeChildAppender(ol.format.KML.writeScaleTextNode_)
+    });
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.LINE_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'color', 'width'
+    ]);
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.LINE_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_),
+      'width': ol.xml.makeChildAppender(ol.format.XSD.writeDecimalTextNode)
+    });
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
 ol.format.KML.PLACEMARK_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'address', 'description', 'name', 'open', 'phoneNumber', 'styleUrl',
-      'visibility'
+      'Style', 'address', 'description', 'name', 'open', 'phoneNumber',
+      'styleUrl', 'visibility'
     ]);
 
 
@@ -1750,17 +2007,18 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
       //    ol.format.KML.writePoint_, 'geometry'),
       //'Polygon': ol.xml.makeObjectPropertySetter(
       //    ol.format.KML.writePolygon_, 'geometry'),
-      //'Style': ol.xml.makeChildAppender(ol.format.KML.writeStyle_),
+      'Style': ol.xml.makeChildAppender(ol.format.KML.writeStyle_),
       //'StyleMap': ol.xml.makeChildAppender(ol.format.KML.writeStyleMap_),
       'address': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
       'description': ol.xml.makeChildAppender(
           ol.format.XSD.writeStringTextNode),
       'name': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
-      'open': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode),
+      'open': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_),
       'phoneNumber': ol.xml.makeChildAppender(
           ol.format.XSD.writeStringTextNode),
       'styleUrl': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
-      'visibility': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode)
+      'visibility': ol.xml.makeChildAppender(
+          ol.format.KML.writeBooleanTextNode_)
     }, ol.xml.makeStructureNS(
         ol.format.KML.GX_NAMESPACE_URIS_, {
       //'MultiTrack': ol.xml.makeChildAppender(
@@ -1768,6 +2026,54 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
       //'Track': ol.xml.makeChildAppender(ol.format.KML.writeGxTrack_)
         }
     ));
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.POLY_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'color', 'fill', 'outline'
+    ]);
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.POLY_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_),
+      'fill': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_),
+      'outline': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_)
+    });
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'IconStyle', 'LineStyle', 'PolyStyle'
+    ]);
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'IconStyle': ol.xml.makeChildAppender(ol.format.KML.writeIconStyle_),
+      'LineStyle': ol.xml.makeChildAppender(ol.format.KML.writeLineStyle_),
+      'PolyStyle': ol.xml.makeChildAppender(ol.format.KML.writePolyStyle_)
+    });
 
 
 /**
