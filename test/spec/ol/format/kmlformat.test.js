@@ -608,6 +608,8 @@ describe('ol.format.KML', function() {
         expect(imageStyle.getSize()).to.be(null);
         expect(style.getText()).to.be(null);
         expect(style.getZIndex()).to.be(undefined);
+        //var serialized = format.writeFeatures(fs);
+        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('can read a complex feature\'s IconStyle', function() {
