@@ -75,6 +75,16 @@ describe('ol.format.KML', function() {
         expect(g).to.be(null);
       });
 
+      it('can write feature with null geometries', function() {
+        var features = [new ol.Feature(null)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark/>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
       it('can read Point geometries', function() {
         var text =
             '<kml xmlns="http://earth.google.com/kml/2.2">' +
@@ -91,6 +101,70 @@ describe('ol.format.KML', function() {
         var g = f.getGeometry();
         expect(g).to.be.an(ol.geom.Point);
         expect(g.getCoordinates()).to.eql([1, 2, 3]);
+      });
+
+      it('can write XY Point geometries', function() {
+        var layout = ol.geom.GeometryLayout.XY;
+        var point = new ol.geom.Point([1, 2], layout);
+        var features = [new ol.Feature(point)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Point>' +
+            '      <coordinates>1,2</coordinates>' +
+            '    </Point>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZ Point geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var point = new ol.geom.Point([1, 2, 3], layout);
+        var features = [new ol.Feature(point)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Point>' +
+            '      <coordinates>1,2,3</coordinates>' +
+            '    </Point>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYM Point geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYM;
+        var point = new ol.geom.Point([1, 2, 100], layout);
+        var features = [new ol.Feature(point)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Point>' +
+            '      <coordinates>1,2</coordinates>' +
+            '    </Point>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZM Point geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZM;
+        var point = new ol.geom.Point([1, 2, 3, 100], layout);
+        var features = [new ol.Feature(point)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Point>' +
+            '      <coordinates>1,2,3</coordinates>' +
+            '    </Point>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read LineString geometries', function() {
@@ -111,6 +185,73 @@ describe('ol.format.KML', function() {
         expect(g.getCoordinates()).to.eql([[1, 2, 3], [4, 5, 6]]);
       });
 
+      it('can write XY LineString geometries', function() {
+        var layout = ol.geom.GeometryLayout.XY;
+        var lineString = new ol.geom.LineString([[1, 2], [3, 4]], layout);
+        var features = [new ol.Feature(lineString)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LineString>' +
+            '      <coordinates>1,2 3,4</coordinates>' +
+            '    </LineString>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZ LineString geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var lineString = new ol.geom.LineString(
+            [[1, 2, 3], [4, 5, 6]], layout);
+        var features = [new ol.Feature(lineString)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LineString>' +
+            '      <coordinates>1,2,3 4,5,6</coordinates>' +
+            '    </LineString>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYM LineString geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYM;
+        var lineString = new ol.geom.LineString(
+            [[1, 2, 100], [3, 4, 200]], layout);
+        var features = [new ol.Feature(lineString)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LineString>' +
+            '      <coordinates>1,2 3,4</coordinates>' +
+            '    </LineString>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZM LineString geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZM;
+        var lineString = new ol.geom.LineString(
+            [[1, 2, 3, 100], [4, 5, 6, 200]], layout);
+        var features = [new ol.Feature(lineString)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LineString>' +
+            '      <coordinates>1,2,3 4,5,6</coordinates>' +
+            '    </LineString>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
       it('can read LinearRing geometries', function() {
         var text =
             '<kml xmlns="http://earth.google.com/kml/2.2">' +
@@ -127,6 +268,74 @@ describe('ol.format.KML', function() {
         var g = f.getGeometry();
         expect(g).to.be.an(ol.geom.Polygon);
         expect(g.getCoordinates()).to.eql([[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]);
+      });
+
+      it('can write XY LinearRing geometries', function() {
+        var layout = ol.geom.GeometryLayout.XY;
+        var linearRing = new ol.geom.LinearRing(
+            [[1, 2], [3, 4], [1, 2]], layout);
+        var features = [new ol.Feature(linearRing)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LinearRing>' +
+            '      <coordinates>1,2 3,4 1,2</coordinates>' +
+            '    </LinearRing>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZ LinearRing geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var linearRing = new ol.geom.LinearRing(
+            [[1, 2, 3], [4, 5, 6], [1, 2, 3]], layout);
+        var features = [new ol.Feature(linearRing)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LinearRing>' +
+            '      <coordinates>1,2,3 4,5,6 1,2,3</coordinates>' +
+            '    </LinearRing>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYM LinearRing geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYM;
+        var linearRing = new ol.geom.LinearRing(
+            [[1, 2, 100], [3, 4, 200], [1, 2, 100]], layout);
+        var features = [new ol.Feature(linearRing)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LinearRing>' +
+            '      <coordinates>1,2 3,4 1,2</coordinates>' +
+            '    </LinearRing>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZM LinearRing geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZM;
+        var linearRing = new ol.geom.LinearRing(
+            [[1, 2, 3, 100], [4, 5, 6, 200], [1, 2, 3, 100]], layout);
+        var features = [new ol.Feature(linearRing)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <LinearRing>' +
+            '      <coordinates>1,2,3 4,5,6 1,2,3</coordinates>' +
+            '    </LinearRing>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read Polygon geometries', function() {
@@ -150,6 +359,91 @@ describe('ol.format.KML', function() {
         expect(g).to.be.an(ol.geom.Polygon);
         expect(g.getCoordinates()).to.eql(
             [[[0, 0, 1], [0, 5, 1], [5, 5, 2], [5, 0, 3]]]);
+      });
+
+      it('can write XY Polygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XY;
+        var polygon = new ol.geom.Polygon(
+            [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]], layout);
+        var features = [new ol.Feature(polygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Polygon>' +
+            '      <outerBoundaryIs>' +
+            '        <LinearRing>' +
+            '          <coordinates>0,0 0,2 2,2 2,0 0,0</coordinates>' +
+            '        </LinearRing>' +
+            '      </outerBoundaryIs>' +
+            '    </Polygon>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZ Polygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var polygon = new ol.geom.Polygon(
+            [[[0, 0, 1], [0, 2, 2], [2, 2, 3], [2, 0, 4], [0, 0, 5]]], layout);
+        var features = [new ol.Feature(polygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Polygon>' +
+            '      <outerBoundaryIs>' +
+            '        <LinearRing>' +
+            '        <coordinates>0,0,1 0,2,2 2,2,3 2,0,4 0,0,5</coordinates>' +
+            '        </LinearRing>' +
+            '      </outerBoundaryIs>' +
+            '    </Polygon>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYM Polygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYM;
+        var polygon = new ol.geom.Polygon(
+            [[[0, 0, 1], [0, 2, 1], [2, 2, 1], [2, 0, 1], [0, 0, 1]]], layout);
+        var features = [new ol.Feature(polygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Polygon>' +
+            '      <outerBoundaryIs>' +
+            '        <LinearRing>' +
+            '          <coordinates>0,0 0,2 2,2 2,0 0,0</coordinates>' +
+            '        </LinearRing>' +
+            '      </outerBoundaryIs>' +
+            '    </Polygon>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write XYZM Polygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZM;
+        var polygon = new ol.geom.Polygon(
+            [[[0, 0, 1, 1], [0, 2, 2, 1], [2, 2, 3, 1],
+              [2, 0, 4, 1], [0, 0, 5, 1]]], layout);
+        var features = [new ol.Feature(polygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Polygon>' +
+            '      <outerBoundaryIs>' +
+            '        <LinearRing>' +
+            '        <coordinates>0,0,1 0,2,2 2,2,3 2,0,4 0,0,5</coordinates>' +
+            '        </LinearRing>' +
+            '      </outerBoundaryIs>' +
+            '    </Polygon>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read complex Polygon geometries', function() {
@@ -185,6 +479,39 @@ describe('ol.format.KML', function() {
             [[[0, 0, 1], [0, 5, 1], [5, 5, 2], [5, 0, 3]],
              [[1, 1, 0], [1, 2, 0], [2, 2, 0], [2, 1, 0]],
              [[3, 3, 0], [3, 4, 0], [4, 4, 0], [4, 3, 0]]]);
+      });
+
+      it('can write complex Polygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var polygon = new ol.geom.Polygon(
+            [[[0, 0, 1], [0, 5, 1], [5, 5, 2], [5, 0, 3]],
+             [[1, 1, 0], [1, 2, 0], [2, 2, 0], [2, 1, 0]],
+             [[3, 3, 0], [3, 4, 0], [4, 4, 0], [4, 3, 0]]], layout);
+        var features = [new ol.Feature(polygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <Polygon>' +
+            '      <innerBoundaryIs>' +
+            '        <LinearRing>' +
+            '          <coordinates>1,1,0 1,2,0 2,2,0 2,1,0</coordinates>' +
+            '        </LinearRing>' +
+            '      </innerBoundaryIs>' +
+            '      <innerBoundaryIs>' +
+            '        <LinearRing>' +
+            '          <coordinates>3,3,0 3,4,0 4,4,0 4,3,0</coordinates>' +
+            '        </LinearRing>' +
+            '      </innerBoundaryIs>' +
+            '      <outerBoundaryIs>' +
+            '        <LinearRing>' +
+            '          <coordinates>0,0,1 0,5,1 5,5,2 5,0,3</coordinates>' +
+            '        </LinearRing>' +
+            '      </outerBoundaryIs>' +
+            '    </Polygon>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read MultiPoint geometries', function() {
@@ -1759,6 +2086,7 @@ goog.require('ol.Feature');
 goog.require('ol.format.KML');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.LineString');
+goog.require('ol.geom.LinearRing');
 goog.require('ol.geom.MultiLineString');
 goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
