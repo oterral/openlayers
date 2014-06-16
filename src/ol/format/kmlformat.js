@@ -20,6 +20,7 @@ goog.require('ol.format.XSD');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
+goog.require('ol.geom.LinearRing');
 goog.require('ol.geom.MultiLineString');
 goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
@@ -1669,6 +1670,50 @@ ol.format.KML.writeColorTextNode_ = function(node, color) {
 
 
 /**
+ * @param {Node} node Node to append a TextNode with the color to.
+ * @param {Array.<number>} coordinates Coordinates.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeCoordinatesTextNode_ =
+    function(node, coordinates, objectStack) {
+  var context = objectStack[objectStack.length - 1];
+  goog.asserts.assert(goog.isObject(context));
+
+  var layout = goog.object.get(context, 'layout');
+  var stride = goog.object.get(context, 'stride');
+
+  var dimension;
+  if (layout == ol.geom.GeometryLayout.XY ||
+      layout == ol.geom.GeometryLayout.XYM) {
+    dimension = 2;
+  } else if (layout == ol.geom.GeometryLayout.XYZ ||
+      layout == ol.geom.GeometryLayout.XYZM) {
+    dimension = 3;
+  } else {
+    goog.asserts.fail();
+  }
+
+  var d, i;
+  var ii = coordinates.length;
+  var text = '';
+  if (ii > 0) {
+    text += coordinates[0];
+    for (d = 1; d < dimension; ++d) {
+      text += ',' + coordinates[d];
+    }
+    for (i = stride; i < ii; i += stride) {
+      text += ' ' + coordinates[i];
+      for (d = 1; d < dimension; ++d) {
+        text += ',' + coordinates[i + d];
+      }
+    }
+  }
+  ol.format.XSD.writeStringTextNode(node, text);
+};
+
+
+/**
  * @param {Node} node Node.
  * @param {Object} icon Icon object.
  * @param {Array.<*>} objectStack Object stack.
@@ -1803,6 +1848,20 @@ ol.format.KML.writeLineStyle_ = function(node, style, objectStack) {
 
 /**
  * @param {Node} node Node.
+ * @param {ol.geom.LinearRing} linearRing Linear ring.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeBoundaryIs_ = function(node, linearRing, objectStack) {
+  var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
+  ol.xml.pushSerializeAndPop(context,
+      ol.format.KML.BOUNDARY_IS_SERIALIZERS_,
+      ol.format.KML.LINEAR_RING_NODE_FACTORY_, [linearRing], objectStack);
+};
+
+
+/**
+ * @param {Node} node Node.
  * @param {ol.Feature} feature Feature.
  * @param {Array.<*>} objectStack Object stack.
  * @private
@@ -1816,7 +1875,9 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
   var context = {node: node, 'properties': properties};
   var geometry = feature.getGeometry();
   if (goog.isDefAndNotNull(geometry)) {
-    goog.object.set(properties, 'geometry', geometry);
+    var geometryType = geometry.getType();
+    var nodeName = ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_[geometryType];
+    goog.object.set(properties, nodeName, geometry);
   }
   var style_ = feature.getStyle();
   if (goog.isDefAndNotNull(style_)) {
@@ -1843,6 +1904,53 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
   ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ (context),
       ol.format.KML.PLACEMARK_SERIALIZERS_, ol.xml.OBJECT_PROPERTY_NODE_FACTORY,
       values, objectStack, orderedKeys);
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.geom.SimpleGeometry} geometry Geometry.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writePrimitiveGeometry_ = function(node, geometry, objectStack) {
+  goog.asserts.assert(
+      (geometry instanceof ol.geom.Point) ||
+      (geometry instanceof ol.geom.LineString) ||
+      (geometry instanceof ol.geom.LinearRing));
+  var flatCoordinates = geometry.getFlatCoordinates();
+  var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
+  goog.object.set(context, 'layout', geometry.getLayout());
+  goog.object.set(context, 'stride', geometry.getStride());
+  ol.xml.pushSerializeAndPop(context,
+      ol.format.KML.PRIMITIVE_GEOMETRY_SERIALIZERS_,
+      ol.format.KML.COORDINATES_NODE_FACTORY_,
+      [flatCoordinates], objectStack);
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.geom.Polygon} polygon Polygon.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writePolygon_ = function(node, polygon, objectStack) {
+  goog.asserts.assertInstanceof(polygon, ol.geom.Polygon);
+  var linearRings = polygon.getLinearRings();
+  goog.asserts.assert(linearRings.length > 0);
+  var outerRing = linearRings.shift();
+  var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
+  // inner rings
+  ol.xml.pushSerializeAndPop(context,
+      ol.format.KML.POLYGON_SERIALIZERS_,
+      ol.format.KML.INNER_BOUNDARY_NODE_FACTORY_,
+      linearRings, objectStack);
+  // outer ring
+  ol.xml.pushSerializeAndPop(context,
+      ol.format.KML.POLYGON_SERIALIZERS_,
+      ol.format.KML.OUTER_BOUNDARY_NODE_FACTORY_,
+      [outerRing], objectStack);
 };
 
 
@@ -1971,6 +2079,19 @@ ol.format.KML.FOLDER_SERIALIZERS_ = ol.xml.makeStructureNS(
 
 /**
  * @const
+ * @type {Object.<string, string>}
+ * @private
+ */
+ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_ = {
+  'Point': 'Point',
+  'LineString': 'LineString',
+  'LinearRing': 'LinearRing',
+  'Polygon': 'Polygon'
+};
+
+
+/**
+ * @const
  * @type {Object.<string, Array.<string>>}
  * @private
  */
@@ -2073,13 +2194,26 @@ ol.format.KML.LINE_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
 
 /**
  * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.BOUNDARY_IS_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'LinearRing': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_)
+    });
+
+
+/**
+ * @const
  * @type {Object.<string, Array.<string>>}
  * @private
  */
 ol.format.KML.PLACEMARK_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'Style', 'address', 'description', 'name', 'open', 'phoneNumber',
-      'styleUrl', 'visibility'
+      'Point', 'LineString', 'LinearRing', 'Polygon',
+      'Style', 'address', 'description', 'name', 'open',
+      'phoneNumber', 'styleUrl', 'visibility'
     ]);
 
 
@@ -2094,14 +2228,13 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
       //    ol.format.KML.writeExtendedData_),
       //'MultiGeometry': ol.xml.makeObjectPropertySetter(
       //    ol.format.KML.writeMultiGeometry_, 'geometry'),
-      //'LineString': ol.xml.makeObjectPropertySetter(
-      //    ol.format.KML.writeLineString_, 'geometry'),
-      //'LinearRing': ol.xml.makeObjectPropertySetter(
-      //    ol.format.KML.writeLinearRing_, 'geometry'),
-      //'Point': ol.xml.makeObjectPropertySetter(
-      //    ol.format.KML.writePoint_, 'geometry'),
-      //'Polygon': ol.xml.makeObjectPropertySetter(
-      //    ol.format.KML.writePolygon_, 'geometry'),
+      'LineString': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_),
+      'LinearRing': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_),
+      'Point': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_),
+      'Polygon': ol.xml.makeChildAppender(ol.format.KML.writePolygon_),
       'Style': ol.xml.makeChildAppender(ol.format.KML.writeStyle_),
       //'StyleMap': ol.xml.makeChildAppender(ol.format.KML.writeStyleMap_),
       'address': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
@@ -2121,6 +2254,32 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
       //'Track': ol.xml.makeChildAppender(ol.format.KML.writeGxTrack_)
         }
     ));
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.PRIMITIVE_GEOMETRY_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'coordinates': ol.xml.makeChildAppender(
+          ol.format.KML.writeCoordinatesTextNode_)
+    });
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.POLYGON_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'outerBoundaryIs': ol.xml.makeChildAppender(
+          ol.format.KML.writeBoundaryIs_),
+      'innerBoundaryIs': ol.xml.makeChildAppender(
+          ol.format.KML.writeBoundaryIs_)
+    });
 
 
 /**
@@ -2199,6 +2358,46 @@ ol.format.KML.KML_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
   goog.asserts.assert(ol.xml.isNode(parentNode));
   return ol.xml.createElementNS(parentNode.namespaceURI, 'Placemark');
 };
+
+
+/**
+ * A factory for creating coordinates nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.COORDINATES_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('coordinates');
+
+
+/**
+ * A factory for creating innerBoundaryIs nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.INNER_BOUNDARY_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('innerBoundaryIs');
+
+
+/**
+ * A factory for creating LinearRing nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.LINEAR_RING_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('LinearRing');
+
+
+/**
+ * A factory for creating outerBoundaryIs nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.OUTER_BOUNDARY_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('outerBoundaryIs');
 
 
 /**
