@@ -1,7 +1,5 @@
 goog.provide('ol.test.format.KML');
 
-goog.require('ol.xml');
-
 
 describe('ol.format.KML', function() {
 
@@ -24,8 +22,6 @@ describe('ol.format.KML', function() {
         var f = fs[0];
         expect(f).to.be.an(ol.Feature);
         expect(f.getId()).to.be('foo');
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('treats a missing id as undefined', function() {
@@ -38,8 +34,28 @@ describe('ol.format.KML', function() {
         var f = fs[0];
         expect(f).to.be.an(ol.Feature);
         expect(f.getId()).to.be(undefined);
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write a Feature', function() {
+        var features = [new ol.Feature()];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark/>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write a Feature\'s id', function() {
+        var feature = new ol.Feature();
+        feature.setId('foo');
+        var features = [feature];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark id="foo"/>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
     });
@@ -57,8 +73,6 @@ describe('ol.format.KML', function() {
         expect(f).to.be.an(ol.Feature);
         var g = f.getGeometry();
         expect(g).to.be(null);
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('can read Point geometries', function() {
@@ -432,8 +446,6 @@ describe('ol.format.KML', function() {
         expect(f).to.be.an(ol.Feature);
         expect(f.get('open')).to.be(true);
         expect(f.get('visibility')).to.be(false);
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('can read string attributes', function() {
@@ -454,8 +466,6 @@ describe('ol.format.KML', function() {
         expect(f.get('description')).to.be('My description');
         expect(f.get('name')).to.be('My name');
         expect(f.get('phoneNumber')).to.be('My phone number');
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('strips leading and trailing whitespace in strings', function() {
@@ -470,8 +480,6 @@ describe('ol.format.KML', function() {
         var f = fs[0];
         expect(f).to.be.an(ol.Feature);
         expect(f.get('description')).to.be('My  description');
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('can read CDATA sections in strings', function() {
@@ -500,6 +508,42 @@ describe('ol.format.KML', function() {
         var f = fs[0];
         expect(f).to.be.an(ol.Feature);
         expect(f.get('name')).to.be('My name in CDATA');
+      });
+
+      it('can write Feature\'s string attributes', function() {
+        var feature = new ol.Feature();
+        feature.set('address', 'My address');
+        feature.set('description', 'My description');
+        feature.set('name', 'My name');
+        feature.set('phoneNumber', 'My phone number');
+        var features = [feature];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <address>My address</address>' +
+            '    <description>My description</description>' +
+            '    <name>My name</name>' +
+            '    <phoneNumber>My phone number</phoneNumber>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write Feature\'s boolean attributes', function() {
+        var feature = new ol.Feature();
+        feature.set('open', true);
+        feature.set('visibility', false);
+        var features = [feature];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <open>1</open>' +
+            '    <visibility>0</visibility>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
     });
@@ -608,8 +652,6 @@ describe('ol.format.KML', function() {
         expect(imageStyle.getSize()).to.be(null);
         expect(style.getText()).to.be(null);
         expect(style.getZIndex()).to.be(undefined);
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('can read a complex feature\'s IconStyle', function() {
@@ -755,8 +797,6 @@ describe('ol.format.KML', function() {
         expect(strokeStyle.getWidth()).to.be(9);
         expect(style.getText()).to.be(null);
         expect(style.getZIndex()).to.be(undefined);
-        //var serialized = format.writeFeatures(fs);
-        //expect(serialized).to.xmleql(ol.xml.load(text));
       });
 
       it('disables the fill when fill is \'0\'', function() {
@@ -868,6 +908,125 @@ describe('ol.format.KML', function() {
             expect(style.getZIndex()).to.be(undefined);
           });
 
+      it('can write an feature\'s icon style', function() {
+        var style = new ol.style.Style({
+          image: new ol.style.Icon({
+            anchor: [0.25, 36],
+            anchorOrigin: ol.style.IconOrigin.TOP_LEFT,
+            anchorXUnits: 'fraction',
+            anchorYUnits: 'pixels',
+            crossOrigin: 'anonymous',
+            offset: [96, 96],
+            offsetOrigin: ol.style.IconOrigin.TOP_LEFT,
+            rotation: 45,
+            scale: 0.5,
+            size: [48, 48],
+            src: 'http://foo.png'
+          })
+        });
+        var imageStyle = style.getImage();
+        imageStyle.iconImage_.size_ = [192, 144]; // sprite de 12 images(4*3)
+        var feature = new ol.Feature();
+        feature.setStyle([style]);
+        var node = format.writeFeatures([feature]);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2"' +
+            '     xmlns:gx="http://www.google.com/kml/ext/2.2">' +
+            '  <Placemark>' +
+            '    <Style>' +
+            '      <IconStyle>' +
+            '        <Icon>' +
+            '          <href>http://foo.png</href>' +
+            '          <gx:x>96</gx:x>' +
+            '          <gx:y>0</gx:y>' +
+            '          <gx:w>48</gx:w>' +
+            '          <gx:h>48</gx:h>' +
+            '        </Icon>' +
+            '        <heading>45</heading>' +
+            '        <hotSpot x="12" y="12" xunits="pixels" ' +
+            '                 yunits="pixels"/>' +
+            '        <scale>0.25</scale>' +
+            '      </IconStyle>' +
+            '    </Style>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write an feature\'s text style', function() {
+        var style = new ol.style.Style({
+          text: new ol.style.Text({
+            text: 'foo',
+            fill: new ol.style.Fill({
+              color: 'rgb(12, 34, 223)'
+            })
+          })
+        });
+        var feature = new ol.Feature();
+        feature.setStyle([style]);
+        var node = format.writeFeatures([feature]);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2"' +
+            '     xmlns:gx="http://www.google.com/kml/ext/2.2">' +
+            '  <Placemark>' +
+            '    <Style>' +
+            '      <LabelStyle>' +
+            '        <color>ff0c22df</color>' +
+            '      </LabelStyle>' +
+            '    </Style>' +
+            '    <name>foo</name>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write an feature\'s stroke style', function() {
+        var style = new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: '#112233',
+            width: 2
+          })
+        });
+        var feature = new ol.Feature();
+        feature.setStyle([style]);
+        var node = format.writeFeatures([feature]);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2"' +
+            '     xmlns:gx="http://www.google.com/kml/ext/2.2">' +
+            '  <Placemark>' +
+            '    <Style>' +
+            '      <LineStyle>' +
+            '        <color>ff112233</color>' +
+            '        <width>2</width>' +
+            '      </LineStyle>' +
+            '    </Style>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
+      it('can write an feature\'s fill style', function() {
+        var style = new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: 'rgba(12, 34, 223, 0.7)'
+          })
+        });
+        var feature = new ol.Feature();
+        feature.setStyle([style]);
+        var node = format.writeFeatures([feature]);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2"' +
+            '     xmlns:gx="http://www.google.com/kml/ext/2.2">' +
+            '  <Placemark>' +
+            '    <Style>' +
+            '      <PolyStyle>' +
+            '        <color>b20c22df</color>' +
+            '      </PolyStyle>' +
+            '    </Style>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
     });
 
     describe('style maps', function() {
@@ -1607,5 +1766,8 @@ goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
 goog.require('ol.style.Fill');
 goog.require('ol.style.Icon');
+goog.require('ol.style.IconOrigin');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Style');
+goog.require('ol.style.Text');
+goog.require('ol.xml');
