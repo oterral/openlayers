@@ -1692,8 +1692,7 @@ ol.format.KML.writeIcon_ = function(node, icon, objectStack) {
   values = ol.xml.makeSequence(icon, orderedKeys);
   ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */
       ({node: node, properties: icon}),
-      ol.format.KML.ICON_SERIALIZERS_, ol.xml.makeSimpleNodeFactory(undefined,
-          ol.format.KML.GX_NAMESPACE_URIS_[0]),
+      ol.format.KML.ICON_SERIALIZERS_, ol.format.KML.GX_NODE_FACTORY_,
       values, objectStack, orderedKeys);
 };
 
@@ -2184,6 +2183,20 @@ ol.format.KML.STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
  * @return {Node|undefined} Node.
  * @private
  */
+ol.format.KML.GX_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
+  return ol.xml.createElementNS(ol.format.KML.GX_NAMESPACE_URIS_[0],
+      'gx:' + opt_nodeName);
+};
+
+
+/**
+ * @const
+ * @param {*} value Value.
+ * @param {Array.<*>} objectStack Object stack.
+ * @param {string=} opt_nodeName Node name.
+ * @return {Node|undefined} Node.
+ * @private
+ */
 ol.format.KML.KML_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
   goog.asserts.assertInstanceof(value, ol.Feature);
   var parentNode = objectStack[objectStack.length - 1].node;
@@ -2208,7 +2221,8 @@ ol.format.KML.prototype.writeFeatures;
  */
 ol.format.KML.prototype.writeFeaturesNode = function(features) {
   var kml = ol.xml.createElementNS('http://earth.google.com/kml/2.2', 'kml');
-  kml.setAttribute('xmlns:gx', ol.format.KML.GX_NAMESPACE_URIS_[0]);
+  kml.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:gx',
+      ol.format.KML.GX_NAMESPACE_URIS_[0]);
   ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */
       ({node: kml}), ol.format.KML.KML_SERIALIZERS_,
       ol.format.KML.KML_NODE_FACTORY_, features, []);
