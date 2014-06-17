@@ -1719,6 +1719,19 @@ ol.format.KML.writeCoordinatesTextNode_ =
 
 /**
  * @param {Node} node Node.
+ * @param {Array.<ol.Feature>} features Features.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeDocument_ = function(node, features, objectStack) {
+  ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ ({node: node}),
+      ol.format.KML.DOCUMENT_SERIALIZERS_,
+      ol.format.KML.DOCUMENT_NODE_FACTORY_, features, objectStack);
+};
+
+
+/**
+ * @param {Node} node Node.
  * @param {Object} icon Icon object.
  * @param {Array.<*>} objectStack Object stack.
  * @private
@@ -2039,17 +2052,39 @@ ol.format.KML.writeVec2_ = function(node, vec2) {
 
 /**
  * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.KML_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'Document', 'Placemark'
+    ]);
+
+
+/**
+ * @const
  * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
  * @private
  */
 ol.format.KML.KML_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
-      //'Document': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeDocumentOrFolder_),
+      'Document': ol.xml.makeChildAppender(
+          ol.format.KML.writeDocument_),
       //'Folder': ol.xml.makeChildAppender(
       //    ol.format.KML.writeDocumentOrFolder_),
       'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
     });
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
+ol.format.KML.DOCUMENT_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'Placemark'
+    ]);
 
 
 /**
@@ -2060,24 +2095,11 @@ ol.format.KML.KML_SERIALIZERS_ = ol.xml.makeStructureNS(
 ol.format.KML.DOCUMENT_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       //'Folder': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeDocumentOrFolder_),
+      //    ol.format.KML.writeFOlder_),
       'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
       //'Style': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyle_),
       //'StyleMap': ol.xml.makeChildAppender(
       //    ol.format.KML.writeSharedStyleMap_)
-    });
-
-
-/**
- * @const
- * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
- * @private
- */
-ol.format.KML.FOLDER_SERIALIZERS_ = ol.xml.makeStructureNS(
-    ol.format.KML.NAMESPACE_URIS_, {
-      'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
-      //'Style': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyle_),
-      //'StyleMap': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyleMap_)
     });
 
 
@@ -2356,7 +2378,8 @@ ol.format.KML.GX_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
  * @return {Node|undefined} Node.
  * @private
  */
-ol.format.KML.KML_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
+ol.format.KML.DOCUMENT_NODE_FACTORY_ = function(value, objectStack,
+    opt_nodeName) {
   goog.asserts.assertInstanceof(value, ol.Feature);
   var parentNode = objectStack[objectStack.length - 1].node;
   goog.asserts.assert(ol.xml.isNode(parentNode));
@@ -2422,8 +2445,18 @@ ol.format.KML.prototype.writeFeaturesNode = function(features) {
   var kml = ol.xml.createElementNS('http://earth.google.com/kml/2.2', 'kml');
   kml.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:gx',
       ol.format.KML.GX_NAMESPACE_URIS_[0]);
-  ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */
-      ({node: kml}), ol.format.KML.KML_SERIALIZERS_,
-      ol.format.KML.KML_NODE_FACTORY_, features, []);
+  var properties = {};
+  var context = {node: kml, 'properties': properties};
+
+  if (features.length > 1) {
+    goog.object.set(properties, 'Document', features);
+  } else if (features.length == 1) {
+    goog.object.set(properties, 'Placemark', features[0]);
+  }
+  var orderedKeys = ol.format.KML.KML_SEQUENCE_[kml.namespaceURI];
+  var values = ol.xml.makeSequence(properties, orderedKeys);
+  ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ (context),
+      ol.format.KML.KML_SERIALIZERS_, ol.xml.OBJECT_PROPERTY_NODE_FACTORY,
+      values, [], orderedKeys);
   return kml;
 };

@@ -1827,6 +1827,25 @@ describe('ol.format.KML', function() {
             '</kml>')).to.be.empty();
       });
 
+      it('can write multiple features', function() {
+        var feature1 = new ol.Feature();
+        feature1.setId('1');
+        var feature2 = new ol.Feature();
+        feature2.setId('2');
+        var node = format.writeFeatures([feature1, feature2]);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2" ' +
+            '     xmlns:gx="http://www.google.com/kml/ext/2.2">' +
+            '  <Document>' +
+            '    <Placemark id="1">' +
+            '    </Placemark>' +
+            '    <Placemark id="2">' +
+            '    </Placemark>' +
+            '  </Document>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
     });
 
     describe('error handling', function() {
