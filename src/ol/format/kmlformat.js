@@ -33,6 +33,7 @@ goog.require('ol.style.IconOrigin');
 goog.require('ol.style.Image');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Style');
+goog.require('ol.style.Text');
 goog.require('ol.xml');
 
 
@@ -1656,7 +1657,14 @@ ol.format.KML.writeBooleanTextNode_ = function(node, bool) {
  * @private
  */
 ol.format.KML.writeColorTextNode_ = function(node, color) {
-  ol.format.XSD.writeStringTextNode(node, ol.color.asString(color));
+  var rgba = ol.color.asArray(color);
+  var opacity = (rgba.length == 4) ? rgba.pop() : 1;
+  var argb = [opacity * 255].concat(rgba);
+  for (var i = 0; i < 4; i++) {
+    var hex = parseInt(argb[i], 10).toString(16);
+    argb[i] = (hex.length == 1) ? '0' + hex : hex;
+  }
+  ol.format.XSD.writeStringTextNode(node, argb.join(''));
 };
 
 
@@ -1699,6 +1707,7 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
   var anchor = style.getAnchor(); // top-left
   var origin = style.getOrigin(); // top-left
   var size = style.getSize();
+  var iconImageSize = style.getImageSize();
 
   goog.asserts.assert(goog.isDefAndNotNull(src));
   goog.asserts.assert(goog.isDefAndNotNull(size));
@@ -1709,10 +1718,11 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
     'h': size[1]
   };
 
-  if (goog.isDefAndNotNull(origin) && origin[0] !== 0 &&
-      origin[1] !== size[1]) {
+  if (goog.isDefAndNotNull(origin) && goog.isDefAndNotNull(iconImageSize) &&
+      origin[0] !== 0 && origin[1] !== size[1]) {
     goog.object.set(iconProperties, 'x', origin[0]);
-    goog.object.set(iconProperties, 'y', size[1] - origin[1]);
+    goog.object.set(iconProperties, 'y', iconImageSize[1] - (origin[1] +
+        size[1]));
   }
 
   goog.object.set(properties, 'Icon', iconProperties);
@@ -1742,6 +1752,31 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
   var values = ol.xml.makeSequence(properties, orderedKeys);
   ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ (context),
       ol.format.KML.ICON_STYLE_SERIALIZERS_,
+      ol.xml.OBJECT_PROPERTY_NODE_FACTORY, values, objectStack, orderedKeys);
+};
+
+
+/**
+ * @param {Node} node Node.
+ * @param {ol.style.Text} style style.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeLabelStyle_ = function(node, style, objectStack) {
+  var properties = {};
+  var context = {node: node, 'properties': properties};
+
+  var fill = style.getFill();
+  if (goog.isDefAndNotNull(fill)) {
+    goog.object.set(properties, 'color', style.getFill().getColor());
+  }
+
+  var parentNode = objectStack[objectStack.length - 1].node;
+  var orderedKeys =
+      ol.format.KML.LABEL_STYLE_SEQUENCE_[parentNode.namespaceURI];
+  var values = ol.xml.makeSequence(properties, orderedKeys);
+  ol.xml.pushSerializeAndPop(/** @type {ol.xml.NodeStackItem} */ (context),
+      ol.format.KML.LABEL_STYLE_SERIALIZERS_,
       ol.xml.OBJECT_PROPERTY_NODE_FACTORY, values, objectStack, orderedKeys);
 };
 
@@ -1797,6 +1832,11 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
     }
     goog.asserts.assertInstanceof(style, ol.style.Style);
     goog.object.set(properties, 'Style', style);
+
+    var textStyle = style.getText();
+    if (goog.isDefAndNotNull(textStyle)) {
+      goog.object.set(properties, 'name', textStyle.getText());
+    }
   }
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.PLACEMARK_SEQUENCE_[parentNode.namespaceURI];
@@ -1849,10 +1889,13 @@ ol.format.KML.writeStyle_ = function(node, style, objectStack) {
   var fillStyle = style.getFill();
   var strokeStyle = style.getStroke();
   var imageStyle = style.getImage();
-  //var textStyle = style.getText();
+  var textStyle = style.getText();
 
   if (goog.isDefAndNotNull(imageStyle)) {
     goog.object.set(properties, 'IconStyle', imageStyle);
+  }
+  if (goog.isDefAndNotNull(textStyle)) {
+    goog.object.set(properties, 'LabelStyle', textStyle);
   }
   if (goog.isDefAndNotNull(strokeStyle)) {
     goog.object.set(properties, 'LineStyle', strokeStyle);
@@ -1989,6 +2032,28 @@ ol.format.KML.ICON_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
  * @type {Object.<string, Array.<string>>}
  * @private
  */
+ol.format.KML.LABEL_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, [
+      'color'
+    ]);
+
+
+/**
+ * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.LABEL_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_)
+    });
+
+
+/**
+ * @const
+ * @type {Object.<string, Array.<string>>}
+ * @private
+ */
 ol.format.KML.LINE_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
       'color', 'width'
@@ -2066,7 +2131,7 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.POLY_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'color', 'fill', 'outline'
+      'color', 'fill'
     ]);
 
 
@@ -2078,8 +2143,7 @@ ol.format.KML.POLY_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
 ol.format.KML.POLY_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_),
-      'fill': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_),
-      'outline': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_)
+      'fill': ol.xml.makeChildAppender(ol.format.KML.writeBooleanTextNode_)
     });
 
 
@@ -2090,7 +2154,7 @@ ol.format.KML.POLY_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'IconStyle', 'LineStyle', 'PolyStyle'
+      'IconStyle', 'LabelStyle', 'LineStyle', 'PolyStyle'
     ]);
 
 
@@ -2102,6 +2166,7 @@ ol.format.KML.STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
 ol.format.KML.STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       'IconStyle': ol.xml.makeChildAppender(ol.format.KML.writeIconStyle_),
+      'LabelStyle': ol.xml.makeChildAppender(ol.format.KML.writeLabelStyle_),
       'LineStyle': ol.xml.makeChildAppender(ol.format.KML.writeLineStyle_),
       'PolyStyle': ol.xml.makeChildAppender(ol.format.KML.writePolyStyle_)
     });
@@ -2117,12 +2182,9 @@ ol.format.KML.STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.KML_NODE_FACTORY_ = function(value, objectStack, opt_nodeName) {
   goog.asserts.assertInstanceof(value, ol.Feature);
-  var geometry = value.getGeometry();
   var parentNode = objectStack[objectStack.length - 1].node;
   goog.asserts.assert(ol.xml.isNode(parentNode));
-  if (goog.isDef(geometry)) {
-    return ol.xml.createElementNS(parentNode.namespaceURI, 'Placemark');
-  }
+  return ol.xml.createElementNS(parentNode.namespaceURI, 'Placemark');
 };
 
 
