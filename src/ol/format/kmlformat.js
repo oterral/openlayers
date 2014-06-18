@@ -1670,7 +1670,7 @@ ol.format.KML.writeColorTextNode_ = function(node, color) {
 
 
 /**
- * @param {Node} node Node to append a TextNode with the color to.
+ * @param {Node} node Node to append a TextNode with the coordinates to.
  * @param {Array.<number>} coordinates Coordinates.
  * @param {Array.<*>} objectStack Object stack.
  * @private
