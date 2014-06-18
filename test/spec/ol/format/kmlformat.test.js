@@ -394,7 +394,9 @@ describe('ol.format.KML', function() {
             '    <Polygon>' +
             '      <outerBoundaryIs>' +
             '        <LinearRing>' +
-            '        <coordinates>0,0,1 0,2,2 2,2,3 2,0,4 0,0,5</coordinates>' +
+            '          <coordinates>' +
+            '            0,0,1 0,2,2 2,2,3 2,0,4 0,0,5' +
+            '          </coordinates>' +
             '        </LinearRing>' +
             '      </outerBoundaryIs>' +
             '    </Polygon>' +
@@ -415,7 +417,9 @@ describe('ol.format.KML', function() {
             '    <Polygon>' +
             '      <outerBoundaryIs>' +
             '        <LinearRing>' +
-            '          <coordinates>0,0 0,2 2,2 2,0 0,0</coordinates>' +
+            '          <coordinates>' +
+            '            0,0 0,2 2,2 2,0 0,0' +
+            '          </coordinates>' +
             '        </LinearRing>' +
             '      </outerBoundaryIs>' +
             '    </Polygon>' +
