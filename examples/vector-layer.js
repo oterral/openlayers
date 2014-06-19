@@ -1,6 +1,7 @@
 goog.require('ol.FeatureOverlay');
 goog.require('ol.Map');
 goog.require('ol.View2D');
+goog.require('ol.format.KML');
 goog.require('ol.layer.Tile');
 goog.require('ol.layer.Vector');
 goog.require('ol.source.GeoJSON');
@@ -125,3 +126,26 @@ $(map.getViewport()).on('mousemove', function(evt) {
 map.on('click', function(evt) {
   displayFeatureInfo(evt.pixel);
 });
+
+var exportKMLElement = document.getElementById('export-kml');
+if ('download' in exportKMLElement) {
+  exportKMLElement.addEventListener('click', function(e) {
+    if (!exportKMLElement.href) {
+      $.get('data/kml/2012-02-10.kml', function(document) {
+        var features = new ol.format.KML().readFeatures(document);
+        var node = new ol.format.KML().writeFeatures(features);
+        var string = new XMLSerializer().serializeToString(node);
+        var base64 = window.btoa(string);
+        //console.debug(base64);
+        exportKMLElement.href = 'data:application/vnd.google-earth.kml+xml;base64,' + base64;
+        exportKMLElement.click();
+      });
+    }
+  }, false);
+} else {
+  var info = document.getElementById('no-download');
+  /**
+   * display error message
+   */
+  info.style.display = '';
+}
