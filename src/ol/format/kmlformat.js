@@ -1665,7 +1665,8 @@ ol.format.KML.writeColorTextNode_ = function(node, color) {
     var hex = parseInt(argb[i], 10).toString(16);
     argb[i] = (hex.length == 1) ? '0' + hex : hex;
   }
-  ol.format.XSD.writeStringTextNode(node, argb.join(''));
+  var abgr = [argb[0], argb[3], argb[2], argb[1]];
+  ol.format.XSD.writeStringTextNode(node, abgr.join(''));
 };
 
 
