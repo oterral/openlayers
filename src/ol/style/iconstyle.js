@@ -232,7 +232,6 @@ ol.style.Icon.prototype.getImage = function(pixelRatio) {
 /**
  * Real Image size used.
  * @return {ol.Size} Size.
- * @todo api
  */
 ol.style.Icon.prototype.getImageSize = function() {
   return this.iconImage_.getSize();
