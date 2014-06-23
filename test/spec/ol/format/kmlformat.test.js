@@ -1108,6 +1108,9 @@ describe('ol.format.KML', function() {
             '  </Placemark>' +
             '</kml>';
         var fs = format.readFeatures(text);
+
+
+
         expect(fs).to.have.length(1);
         var f = fs[0];
         expect(f).to.be.an(ol.Feature);
@@ -1302,7 +1305,7 @@ describe('ol.format.KML', function() {
             '  <Placemark>' +
             '    <Style>' +
             '      <LabelStyle>' +
-            '        <color>ff0c22df</color>' +
+            '        <color>ffdf220c</color>' +
             '      </LabelStyle>' +
             '    </Style>' +
             '    <name>foo</name>' +
@@ -1327,7 +1330,7 @@ describe('ol.format.KML', function() {
             '  <Placemark>' +
             '    <Style>' +
             '      <LineStyle>' +
-            '        <color>ff112233</color>' +
+            '        <color>ff332211</color>' +
             '        <width>2</width>' +
             '      </LineStyle>' +
             '    </Style>' +
@@ -1351,7 +1354,7 @@ describe('ol.format.KML', function() {
             '  <Placemark>' +
             '    <Style>' +
             '      <PolyStyle>' +
-            '        <color>b20c22df</color>' +
+            '        <color>b2df220c</color>' +
             '      </PolyStyle>' +
             '    </Style>' +
             '  </Placemark>' +
