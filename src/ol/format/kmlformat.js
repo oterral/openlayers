@@ -1665,7 +1665,8 @@ ol.format.KML.writeColorTextNode_ = function(node, color) {
     var hex = parseInt(argb[i], 10).toString(16);
     argb[i] = (hex.length == 1) ? '0' + hex : hex;
   }
-  ol.format.XSD.writeStringTextNode(node, argb.join(''));
+  var abgr = [argb[0], argb[3], argb[2], argb[1]];
+  ol.format.XSD.writeStringTextNode(node, abgr.join(''));
 };
 
 
@@ -1761,38 +1762,40 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
   var properties = {};
   var context = {node: node, 'properties': properties};
   var src = style.getSrc();
-  var anchor = style.getAnchor(); // top-left
-  var origin = style.getOrigin(); // top-left
   var size = style.getSize();
   var iconImageSize = style.getImageSize();
 
   goog.asserts.assert(goog.isDefAndNotNull(src));
-  goog.asserts.assert(goog.isDefAndNotNull(size));
 
   var iconProperties = {
-    'href': src,
-    'w': size[0],
-    'h': size[1]
+    'href': src
   };
 
-  if (goog.isDefAndNotNull(origin) && goog.isDefAndNotNull(iconImageSize) &&
-      origin[0] !== 0 && origin[1] !== size[1]) {
-    goog.object.set(iconProperties, 'x', origin[0]);
-    goog.object.set(iconProperties, 'y', iconImageSize[1] - (origin[1] +
-        size[1]));
+  if (goog.isDefAndNotNull(size)) {
+    goog.object.set(iconProperties, 'w', size[0]);
+    goog.object.set(iconProperties, 'h', size[1]);
+    var anchor = style.getAnchor(); // top-left
+    var origin = style.getOrigin(); // top-left
+
+    if (goog.isDefAndNotNull(origin) && goog.isDefAndNotNull(iconImageSize) &&
+        origin[0] !== 0 && origin[1] !== size[1]) {
+      goog.object.set(iconProperties, 'x', origin[0]);
+      goog.object.set(iconProperties, 'y', iconImageSize[1] - (origin[1] +
+          size[1]));
+    }
+
+    if (goog.isDefAndNotNull(anchor) && anchor[0] !== 0 &&
+        anchor[1] !== size[1]) {
+      goog.object.set(properties, 'hotSpot', {
+        x: anchor[0],
+        xunits: ol.style.IconAnchorUnits.PIXELS,
+        y: size[1] - anchor[1],
+        yunits: ol.style.IconAnchorUnits.PIXELS
+      });
+    }
   }
 
   goog.object.set(properties, 'Icon', iconProperties);
-
-  if (goog.isDefAndNotNull(anchor) && anchor[0] !== 0 &&
-      anchor[1] !== size[1]) {
-    goog.object.set(properties, 'hotSpot', {
-      x: anchor[0],
-      xunits: ol.style.IconAnchorUnits.PIXELS,
-      y: size[1] - anchor[1],
-      yunits: ol.style.IconAnchorUnits.PIXELS
-    });
-  }
 
   var scale = style.getScale();
   if (goog.isDefAndNotNull(scale) && scale !== 1) {
