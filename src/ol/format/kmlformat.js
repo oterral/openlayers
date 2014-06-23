@@ -1868,6 +1868,46 @@ ol.format.KML.writeLineStyle_ = function(node, style, objectStack) {
 
 /**
  * @param {Node} node Node.
+ * @param {ol.geom.Geometry} geometry Geometry.
+ * @param {Array.<*>} objectStack Object stack.
+ * @private
+ */
+ol.format.KML.writeMultiGeometry_ =
+    function(node, geometry, objectStack) {
+  goog.asserts.assert(
+      (geometry instanceof ol.geom.MultiPoint) ||
+      (geometry instanceof ol.geom.MultiLineString) ||
+      (geometry instanceof ol.geom.MultiPolygon));
+  /** @type {ol.xml.NodeStackItem} */
+  var context = {node: node};
+  var type = geometry.getType();
+  /** @type {Array.<ol.geom.Geometry>} */
+  var geometries;
+  /** @type {function(*, Array.<*>, string=): (Node|undefined)} */
+  var factory;
+  if (type == ol.geom.GeometryType.MULTI_POINT) {
+    geometries =
+        (/** @type {ol.geom.MultiPoint} */ (geometry)).getPoints();
+    factory = ol.format.KML.POINT_NODE_FACTORY_;
+  } else if (type == ol.geom.GeometryType.MULTI_LINE_STRING) {
+    geometries =
+        (/** @type {ol.geom.MultiLineString} */ (geometry)).getLineStrings();
+    factory = ol.format.KML.LINE_STRING_NODE_FACTORY_;
+  } else if (type == ol.geom.GeometryType.MULTI_POLYGON) {
+    geometries =
+        (/** @type {ol.geom.MultiPolygon} */ (geometry)).getPolygons();
+    factory = ol.format.KML.POLYGON_NODE_FACTORY_;
+  } else {
+    goog.asserts.fail();
+  }
+  ol.xml.pushSerializeAndPop(context,
+      ol.format.KML.MULTI_GEOMETRY_SERIALIZERS_, factory,
+      geometries, objectStack);
+};
+
+
+/**
+ * @param {Node} node Node.
  * @param {ol.geom.LinearRing} linearRing Linear ring.
  * @param {Array.<*>} objectStack Object stack.
  * @private
@@ -1897,7 +1937,9 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
   if (goog.isDefAndNotNull(geometry)) {
     var geometryType = geometry.getType();
     var nodeName = ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_[geometryType];
-    goog.object.set(properties, nodeName, geometry);
+    if (goog.isDef(nodeName)) {
+      goog.object.set(properties, nodeName, geometry);
+    }
   }
   var style_ = feature.getStyle();
   if (goog.isDefAndNotNull(style_)) {
@@ -2115,7 +2157,10 @@ ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_ = {
   'Point': 'Point',
   'LineString': 'LineString',
   'LinearRing': 'LinearRing',
-  'Polygon': 'Polygon'
+  'Polygon': 'Polygon',
+  'MultiPoint': 'MultiGeometry',
+  'MultiLineString': 'MultiGeometry',
+  'MultiPolygon': 'MultiGeometry'
 };
 
 
@@ -2235,12 +2280,27 @@ ol.format.KML.BOUNDARY_IS_SERIALIZERS_ = ol.xml.makeStructureNS(
 
 /**
  * @const
+ * @type {Object.<string, Object.<string, ol.xml.Serializer>>}
+ * @private
+ */
+ol.format.KML.MULTI_GEOMETRY_SERIALIZERS_ = ol.xml.makeStructureNS(
+    ol.format.KML.NAMESPACE_URIS_, {
+      'LineString': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_),
+      'Point': ol.xml.makeChildAppender(
+          ol.format.KML.writePrimitiveGeometry_),
+      'Polygon': ol.xml.makeChildAppender(ol.format.KML.writePolygon_)
+    });
+
+
+/**
+ * @const
  * @type {Object.<string, Array.<string>>}
  * @private
  */
 ol.format.KML.PLACEMARK_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'Point', 'LineString', 'LinearRing', 'Polygon',
+      'Point', 'LineString', 'LinearRing', 'Polygon', 'MultiGeometry',
       'Style', 'address', 'description', 'name', 'open',
       'phoneNumber', 'styleUrl', 'visibility'
     ]);
@@ -2255,8 +2315,8 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       //'ExtendedData': ol.xml.makeChildAppender(
       //    ol.format.KML.writeExtendedData_),
-      //'MultiGeometry': ol.xml.makeObjectPropertySetter(
-      //    ol.format.KML.writeMultiGeometry_, 'geometry'),
+      'MultiGeometry': ol.xml.makeChildAppender(
+          ol.format.KML.writeMultiGeometry_),
       'LineString': ol.xml.makeChildAppender(
           ol.format.KML.writePrimitiveGeometry_),
       'LinearRing': ol.xml.makeChildAppender(
@@ -2411,6 +2471,26 @@ ol.format.KML.INNER_BOUNDARY_NODE_FACTORY_ =
 
 
 /**
+ * A factory for creating Point nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.POINT_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('Point');
+
+
+/**
+ * A factory for creating LineString nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.LINE_STRING_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('LineString');
+
+
+/**
  * A factory for creating LinearRing nodes.
  * @const
  * @type {function(*, Array.<*>, string=): (Node|undefined)}
@@ -2418,6 +2498,16 @@ ol.format.KML.INNER_BOUNDARY_NODE_FACTORY_ =
  */
 ol.format.KML.LINEAR_RING_NODE_FACTORY_ =
     ol.xml.makeSimpleNodeFactory('LinearRing');
+
+
+/**
+ * A factory for creating Polygon nodes.
+ * @const
+ * @type {function(*, Array.<*>, string=): (Node|undefined)}
+ * @private
+ */
+ol.format.KML.POLYGON_NODE_FACTORY_ =
+    ol.xml.makeSimpleNodeFactory('Polygon');
 
 
 /**
