@@ -1737,8 +1737,8 @@ ol.format.KML.writeDocument_ = function(node, features, objectStack) {
  * @private
  */
 ol.format.KML.writeIcon_ = function(node, icon, objectStack) {
-  var context = /** @type {ol.xml.NodeStackItem} */ {node: node,
-      properties: icon};
+  var /** @type {ol.xml.NodeStackItem} */ context = {node: node,
+    properties: icon};
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.ICON_SEQUENCE_[parentNode.namespaceURI];
   var values = ol.xml.makeSequence(icon, orderedKeys);
@@ -1767,7 +1767,6 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
   var src = style.getSrc();
   var size = style.getSize();
   var iconImageSize = style.getImageSize();
-
   var iconProperties = {
     'href': src
   };
@@ -1827,10 +1826,13 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
 ol.format.KML.writeLabelStyle_ = function(node, style, objectStack) {
   var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
   var properties = {};
-
   var fill = style.getFill();
   if (!goog.isNull(fill)) {
     goog.object.set(properties, 'color', fill.getColor());
+  }
+  var scale = style.getScale();
+  if (goog.isDef(scale) && scale !== 1) {
+    goog.object.set(properties, 'scale', scale);
   }
 
   var parentNode = objectStack[objectStack.length - 1].node;
@@ -2110,8 +2112,6 @@ ol.format.KML.KML_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
       'Document': ol.xml.makeChildAppender(
           ol.format.KML.writeDocument_),
-      //'Folder': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeDocumentOrFolder_),
       'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
     });
 
@@ -2134,12 +2134,7 @@ ol.format.KML.DOCUMENT_SEQUENCE_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.DOCUMENT_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
-      //'Folder': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeFOlder_),
       'Placemark': ol.xml.makeChildAppender(ol.format.KML.writePlacemark_)
-      //'Style': ol.xml.makeChildAppender(ol.format.KML.writeSharedStyle_),
-      //'StyleMap': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeSharedStyleMap_)
     });
 
 
@@ -2223,7 +2218,7 @@ ol.format.KML.ICON_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.LABEL_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'color'
+      'color', 'scale'
     ]);
 
 
@@ -2234,7 +2229,8 @@ ol.format.KML.LABEL_STYLE_SEQUENCE_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.LABEL_STYLE_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
-      'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_)
+      'color': ol.xml.makeChildAppender(ol.format.KML.writeColorTextNode_),
+      'scale': ol.xml.makeChildAppender(ol.format.KML.writeScaleTextNode_)
     });
 
 
@@ -2308,8 +2304,6 @@ ol.format.KML.PLACEMARK_SEQUENCE_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, {
-      //'ExtendedData': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeExtendedData_),
       'MultiGeometry': ol.xml.makeChildAppender(
           ol.format.KML.writeMultiGeometry_),
       'LineString': ol.xml.makeChildAppender(
@@ -2320,7 +2314,6 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
           ol.format.KML.writePrimitiveGeometry_),
       'Polygon': ol.xml.makeChildAppender(ol.format.KML.writePolygon_),
       'Style': ol.xml.makeChildAppender(ol.format.KML.writeStyle_),
-      //'StyleMap': ol.xml.makeChildAppender(ol.format.KML.writeStyleMap_),
       'address': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
       'description': ol.xml.makeChildAppender(
           ol.format.XSD.writeStringTextNode),
@@ -2331,13 +2324,7 @@ ol.format.KML.PLACEMARK_SERIALIZERS_ = ol.xml.makeStructureNS(
       'styleUrl': ol.xml.makeChildAppender(ol.format.XSD.writeStringTextNode),
       'visibility': ol.xml.makeChildAppender(
           ol.format.KML.writeBooleanTextNode_)
-    }, ol.xml.makeStructureNS(
-        ol.format.KML.GX_NAMESPACE_URIS_, {
-      //'MultiTrack': ol.xml.makeChildAppender(
-      //    ol.format.KML.writeGxMultiTrack_),
-      //'Track': ol.xml.makeChildAppender(ol.format.KML.writeGxTrack_)
-        }
-    ));
+    });
 
 
 /**

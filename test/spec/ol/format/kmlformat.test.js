@@ -1365,6 +1365,7 @@ describe('ol.format.KML', function() {
       it('can write an feature\'s text style', function() {
         var style = new ol.style.Style({
           text: new ol.style.Text({
+            scale: 0.5,
             text: 'foo',
             fill: new ol.style.Fill({
               color: 'rgb(12, 34, 223)'
@@ -1381,6 +1382,7 @@ describe('ol.format.KML', function() {
             '    <Style>' +
             '      <LabelStyle>' +
             '        <color>ffdf220c</color>' +
+            '        <scale>0.25</scale>' +
             '      </LabelStyle>' +
             '    </Style>' +
             '    <name>foo</name>' +
