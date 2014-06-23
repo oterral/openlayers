@@ -136,8 +136,8 @@ if ('download' in exportKMLElement) {
         var node = new ol.format.KML().writeFeatures(features);
         var string = new XMLSerializer().serializeToString(node);
         var base64 = window.btoa(string);
-        //console.debug(base64);
-        exportKMLElement.href = 'data:application/vnd.google-earth.kml+xml;base64,' + base64;
+        exportKMLElement.href =
+            'data:application/vnd.google-earth.kml+xml;base64,' + base64;
         exportKMLElement.click();
       });
     }
