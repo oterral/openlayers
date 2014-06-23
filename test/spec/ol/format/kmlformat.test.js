@@ -541,6 +541,28 @@ describe('ol.format.KML', function() {
         expect(g.getCoordinates()).to.eql([[1, 2, 3], [4, 5, 6]]);
       });
 
+      it('can write MultiPoint geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var multiPoint = new ol.geom.MultiPoint(
+            [[1, 2, 3], [4, 5, 6]], layout);
+        var features = [new ol.Feature(multiPoint)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <MultiGeometry>' +
+            '      <Point>' +
+            '        <coordinates>1,2,3</coordinates>' +
+            '      </Point>' +
+            '      <Point>' +
+            '        <coordinates>4,5,6</coordinates>' +
+            '      </Point>' +
+            '    </MultiGeometry>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
+      });
+
       it('can read MultiLineString geometries', function() {
         var text =
             '<kml xmlns="http://earth.google.com/kml/2.2">' +
@@ -563,6 +585,28 @@ describe('ol.format.KML', function() {
         expect(g).to.be.an(ol.geom.MultiLineString);
         expect(g.getCoordinates()).to.eql(
             [[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]);
+      });
+
+      it('can write MultiLineString geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var multiLineString = new ol.geom.MultiLineString(
+            [[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]], layout);
+        var features = [new ol.Feature(multiLineString)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <MultiGeometry>' +
+            '      <LineString>' +
+            '        <coordinates>1,2,3 4,5,6</coordinates>' +
+            '      </LineString>' +
+            '      <LineString>' +
+            '        <coordinates>7,8,9 10,11,12</coordinates>' +
+            '      </LineString>' +
+            '    </MultiGeometry>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read MultiPolygon geometries', function() {
@@ -596,6 +640,37 @@ describe('ol.format.KML', function() {
         expect(g.getCoordinates()).to.eql(
             [[[[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]]],
              [[[3, 0, 0], [3, 1, 0], [4, 1, 0], [4, 0, 0]]]]);
+      });
+
+      it('can write MultiPolygon geometries', function() {
+        var layout = ol.geom.GeometryLayout.XYZ;
+        var multiPolygon = new ol.geom.MultiPolygon(
+            [[[[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]]],
+             [[[3, 0, 0], [3, 1, 0], [4, 1, 0], [4, 0, 0]]]], layout);
+        var features = [new ol.Feature(multiPolygon)];
+        var node = format.writeFeatures(features);
+        var text =
+            '<kml xmlns="http://earth.google.com/kml/2.2">' +
+            '  <Placemark>' +
+            '    <MultiGeometry>' +
+            '      <Polygon>' +
+            '        <outerBoundaryIs>' +
+            '          <LinearRing>' +
+            '            <coordinates>0,0,0 0,1,0 1,1,0 1,0,0</coordinates>' +
+            '          </LinearRing>' +
+            '        </outerBoundaryIs>' +
+            '      </Polygon>' +
+            '      <Polygon>' +
+            '        <outerBoundaryIs>' +
+            '          <LinearRing>' +
+            '            <coordinates>3,0,0 3,1,0 4,1,0 4,0,0</coordinates>' +
+            '          </LinearRing>' +
+            '        </outerBoundaryIs>' +
+            '      </Polygon>' +
+            '    </MultiGeometry>' +
+            '  </Placemark>' +
+            '</kml>';
+        expect(node).to.xmleql(ol.xml.load(text));
       });
 
       it('can read empty GeometryCollection geometries', function() {
