@@ -1,6 +1,7 @@
 // FIXME http://earth.google.com/kml/1.0 namespace?
 // FIXME why does node.getAttribute return an unknown type?
 // FIXME text
+// FIXME serialize arbitrary feature properties
 
 goog.provide('ol.format.KML');
 
@@ -1665,7 +1666,8 @@ ol.format.KML.writeColorTextNode_ = function(node, color) {
   var rgba = ol.color.asArray(color);
   var opacity = (rgba.length == 4) ? rgba[3] : 1;
   var abgr = [opacity * 255, rgba[2], rgba[1], rgba[0]];
-  for (var i = 0; i < 4; i++) {
+  var i;
+  for (i = 0; i < 4; ++i) {
     var hex = parseInt(abgr[i], 10).toString(16);
     abgr[i] = (hex.length == 1) ? '0' + hex : hex;
   }
@@ -1744,7 +1746,6 @@ ol.format.KML.writeIcon_ = function(node, icon, objectStack) {
   ol.xml.pushSerializeAndPop(context,
       ol.format.KML.ICON_SERIALIZERS_, ol.xml.OBJECT_PROPERTY_NODE_FACTORY,
       values, objectStack, orderedKeys);
-
   orderedKeys =
       ol.format.KML.ICON_SEQUENCE_[ol.format.KML.GX_NAMESPACE_URIS_[0]];
   values = ol.xml.makeSequence(icon, orderedKeys);
@@ -1769,22 +1770,22 @@ ol.format.KML.writeIconStyle_ = function(node, style, objectStack) {
     'href': src
   };
 
-  if (goog.isDefAndNotNull(size)) {
+  if (!goog.isNull(size)) {
     goog.object.set(iconProperties, 'w', size[0]);
     goog.object.set(iconProperties, 'h', size[1]);
     var anchor = style.getAnchor(); // top-left
     var origin = style.getOrigin(); // top-left
 
-    if (goog.isDefAndNotNull(origin) && goog.isDefAndNotNull(iconImageSize) &&
+    if (!goog.isNull(origin) && !goog.isNull(iconImageSize) &&
         origin[0] !== 0 && origin[1] !== size[1]) {
       goog.object.set(iconProperties, 'x', origin[0]);
-      goog.object.set(iconProperties, 'y', iconImageSize[1] - (origin[1] +
-          size[1]));
+      goog.object.set(iconProperties, 'y',
+          iconImageSize[1] - (origin[1] + size[1]));
     }
 
-    if (goog.isDefAndNotNull(anchor) && anchor[0] !== 0 &&
-        anchor[1] !== size[1]) {
-      var hotSpot = /** ol.format.KMLVec2_ */ {
+    if (!goog.isNull(anchor) &&
+        anchor[0] !== 0 && anchor[1] !== size[1]) {
+      var /** @type {ol.format.KMLVec2_} */ hotSpot = {
         x: anchor[0],
         xunits: ol.style.IconAnchorUnits.PIXELS,
         y: size[1] - anchor[1],
@@ -1831,7 +1832,6 @@ ol.format.KML.writeLabelStyle_ = function(node, style, objectStack) {
   if (goog.isDef(scale) && scale !== 1) {
     goog.object.set(properties, 'scale', scale);
   }
-
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys =
       ol.format.KML.LABEL_STYLE_SEQUENCE_[parentNode.namespaceURI];
@@ -1853,7 +1853,6 @@ ol.format.KML.writeLineStyle_ = function(node, style, objectStack) {
     'color': style.getColor(),
     'width': style.getWidth()
   };
-
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.LINE_STYLE_SEQUENCE_[parentNode.namespaceURI];
   var values = ol.xml.makeSequence(properties, orderedKeys);
@@ -1917,6 +1916,8 @@ ol.format.KML.writeBoundaryIs_ = function(node, linearRing, objectStack) {
 
 
 /**
+ * FIXME currently we do serialize arbitrary/custom feature properties
+ * (ExtendedData).
  * @param {Node} node Node.
  * @param {ol.Feature} feature Feature.
  * @param {Array.<*>} objectStack Object stack.
@@ -1928,8 +1929,6 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
     node.setAttribute('id', feature.getId());
   }
   var properties = feature.getProperties();
-  // FIXME Manage custom feature properties (ExtendedData)
-
   var geometry = feature.getGeometry();
   if (goog.isDefAndNotNull(geometry)) {
     var geometryType = geometry.getType();
@@ -1938,7 +1937,6 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
       goog.object.set(properties, nodeName, geometry);
     }
   }
-
   var styleFunction = feature.getStyleFunction();
   if (goog.isDef(styleFunction)) {
     // FIXME the styles returned by the style function are supposed to be
@@ -1952,7 +1950,6 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
         goog.object.set(properties, 'name', textStyle.getText());
       }
     }
-
   }
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.PLACEMARK_SEQUENCE_[parentNode.namespaceURI];
@@ -2019,7 +2016,6 @@ ol.format.KML.writePolyStyle_ = function(node, style, objectStack) {
   var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
   ol.xml.pushSerializeAndPop(context, ol.format.KML.POLY_STYLE_SERIALIZERS_,
       ol.format.KML.COLOR_NODE_FACTORY_, [style.getColor()], objectStack);
-
 };
 
 
@@ -2046,7 +2042,6 @@ ol.format.KML.writeStyle_ = function(node, style, objectStack) {
   var strokeStyle = style.getStroke();
   var imageStyle = style.getImage();
   var textStyle = style.getText();
-
   if (!goog.isNull(imageStyle)) {
     goog.object.set(properties, 'IconStyle', imageStyle);
   }
@@ -2059,7 +2054,6 @@ ol.format.KML.writeStyle_ = function(node, style, objectStack) {
   if (!goog.isNull(fillStyle)) {
     goog.object.set(properties, 'PolyStyle', fillStyle);
   }
-
   var parentNode = objectStack[objectStack.length - 1].node;
   var orderedKeys = ol.format.KML.STYLE_SEQUENCE_[parentNode.namespaceURI];
   var values = ol.xml.makeSequence(properties, orderedKeys);
@@ -2507,7 +2501,6 @@ ol.format.KML.prototype.writeFeaturesNode = function(features) {
       ol.format.KML.GX_NAMESPACE_URIS_[0]);
   var /** @type {ol.xml.NodeStackItem} */ context = {node: kml};
   var properties = {};
-
   if (features.length > 1) {
     goog.object.set(properties, 'Document', features);
   } else if (features.length == 1) {
