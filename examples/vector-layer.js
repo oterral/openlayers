@@ -134,7 +134,8 @@ if ('download' in exportKMLElement) {
       $.get('data/kml/2012-02-10.kml', function(document) {
         var features = new ol.format.KML().readFeatures(document);
         var node = new ol.format.KML().writeFeatures(features);
-        var string = new XMLSerializer().serializeToString(node);
+        var string = new XMLSerializer().serializeToString(
+            /** @type {Node} */ (node));
         var base64 = window.btoa(string);
         exportKMLElement.href =
             'data:application/vnd.google-earth.kml+xml;base64,' + base64;
