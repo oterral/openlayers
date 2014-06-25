@@ -18,6 +18,7 @@ goog.require('ol.color');
 goog.require('ol.feature');
 goog.require('ol.format.XMLFeature');
 goog.require('ol.format.XSD');
+goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
@@ -1925,18 +1926,19 @@ ol.format.KML.writeBoundaryIs_ = function(node, linearRing, objectStack) {
  */
 ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
   var /** @type {ol.xml.NodeStackItem} */ context = {node: node};
+
+  // set id
   if (goog.isDefAndNotNull(feature.getId())) {
     node.setAttribute('id', feature.getId());
   }
+
+  // serialize geometry
+  ol.xml.pushSerializeAndPop(context, ol.format.KML.PLACEMARK_SERIALIZERS_,
+      ol.format.KML.GEOMETRY_NODE_FACTORY_,
+      [feature.getGeometry()], objectStack);
+
+  // serialize properties (properties unknown to KML are not serialized)
   var properties = feature.getProperties();
-  var geometry = feature.getGeometry();
-  if (goog.isDefAndNotNull(geometry)) {
-    var geometryType = geometry.getType();
-    var nodeName = ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_[geometryType];
-    if (goog.isDef(nodeName)) {
-      goog.object.set(properties, nodeName, geometry);
-    }
-  }
   var styleFunction = feature.getStyleFunction();
   if (goog.isDef(styleFunction)) {
     // FIXME the styles returned by the style function are supposed to be
@@ -1944,7 +1946,6 @@ ol.format.KML.writePlacemark_ = function(node, feature, objectStack) {
     var styles = styleFunction.call(feature, 0);
     if (!goog.isNull(styles) && styles.length > 0) {
       goog.object.set(properties, 'Style', styles[0]);
-
       var textStyle = styles[0].getText();
       if (!goog.isNull(textStyle)) {
         goog.object.set(properties, 'name', textStyle.getText());
@@ -2273,7 +2274,6 @@ ol.format.KML.MULTI_GEOMETRY_SERIALIZERS_ = ol.xml.makeStructureNS(
  */
 ol.format.KML.PLACEMARK_SEQUENCE_ = ol.xml.makeStructureNS(
     ol.format.KML.NAMESPACE_URIS_, [
-      'Point', 'LineString', 'LinearRing', 'Polygon', 'MultiGeometry',
       'Style', 'address', 'description', 'name', 'open',
       'phoneNumber', 'styleUrl', 'visibility'
     ]);
@@ -2399,6 +2399,26 @@ ol.format.KML.DOCUMENT_NODE_FACTORY_ = function(value, objectStack,
   var parentNode = objectStack[objectStack.length - 1].node;
   goog.asserts.assert(ol.xml.isNode(parentNode));
   return ol.xml.createElementNS(parentNode.namespaceURI, 'Placemark');
+};
+
+
+/**
+ * @const
+ * @param {*} value Value.
+ * @param {Array.<*>} objectStack Object stack.
+ * @param {string=} opt_nodeName Node name.
+ * @return {Node|undefined} Node.
+ * @private
+ */
+ol.format.KML.GEOMETRY_NODE_FACTORY_ = function(value, objectStack,
+    opt_nodeName) {
+  if (goog.isDefAndNotNull(value)) {
+    goog.asserts.assertInstanceof(value, ol.geom.Geometry);
+    var parentNode = objectStack[objectStack.length - 1].node;
+    goog.asserts.assert(ol.xml.isNode(parentNode));
+    return ol.xml.createElementNS(parentNode.namespaceURI,
+        ol.format.KML.GEOMETRY_TYPE_TO_NODENAME_[value.getType()]);
+  }
 };
 
 
