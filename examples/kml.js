@@ -55,3 +55,29 @@ $(map.getViewport()).on('mousemove', function(evt) {
 map.on('click', function(evt) {
   displayFeatureInfo(evt.pixel);
 });
+
+var exportKMLElement = document.getElementById('export-kml');
+if ('download' in exportKMLElement) {
+  exportKMLElement.addEventListener('click', function(e) {
+    if (!exportKMLElement.href) {
+      var features = [];
+      vector.getSource().forEachFeature(function(feature) {
+        var clone = feature.clone();
+        clone.setId(feature.getId());  // clone does not set the id
+        clone.getGeometry().transform(vector.getSource().getProjection(), 'EPSG:4326');
+        features.push(clone);
+      });
+      var node = new ol.format.KML().writeFeatures(features);
+      var string = new XMLSerializer().serializeToString( /** @type {Node} */ (node));
+      var base64 = window.btoa(string);
+      exportKMLElement.href =
+          'data:application/vnd.google-earth.kml+xml;base64,' + base64;
+    }
+  }, false);
+} else {
+  var info = document.getElementById('no-download');
+  /**
+   * display error message
+   */
+  info.style.display = '';
+}
