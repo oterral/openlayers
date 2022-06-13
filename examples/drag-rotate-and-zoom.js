@@ -3,12 +3,16 @@ import OSM from '../src/ol/source/OSM.js';
 import TileLayer from '../src/ol/layer/Tile.js';
 import View from '../src/ol/View.js';
 import {
+  DblClickDragZoom,
   DragRotateAndZoom,
   defaults as defaultInteractions,
 } from '../src/ol/interaction.js';
 
 const map = new Map({
-  interactions: defaultInteractions().extend([new DragRotateAndZoom()]),
+  interactions: defaultInteractions().extend([
+    new DragRotateAndZoom(),
+    new DblClickDragZoom(),
+  ]),
   layers: [
     new TileLayer({
       source: new OSM(),
