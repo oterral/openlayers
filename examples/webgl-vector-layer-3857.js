@@ -5,9 +5,7 @@ import GeoJSON from '../src/ol/format/GeoJSON.js';
 import TileLayer from '../src/ol/layer/WebGLTile.js';
 import WebGLVectorLayer from '../src/ol/layer/WebGLVector.js';
 import {register} from '../src/ol/proj/proj4.js';
-import {transform} from '../src/ol/proj.js';
 import OSM from '../src/ol/source/OSM.js';
-import TileWMS from '../src/ol/source/TileWMS.js';
 import VectorSource from '../src/ol/source/Vector.js';
 
 proj4.defs(
@@ -42,19 +40,6 @@ const osm = new TileLayer({
   source: new OSM(),
 });
 
-const tileLayer = new TileLayer({
-  source: new TileWMS({
-    url: 'https://wms.geo.admin.ch/',
-    crossOrigin: 'anonymous',
-    params: {
-      'LAYERS': 'ch.swisstopo.pixelkarte-farbe',
-      'FORMAT': 'image/jpeg',
-    },
-
-    serverType: 'mapserver',
-  }),
-});
-
 const layers = [
   'data/geojson/belegungungen_Aktivitat.geojson',
   // 'data/geojson/belegungungen_Festivitat.geojson',
@@ -66,7 +51,7 @@ const layers = [
   return new WebGLVectorLayer({
     source: new VectorSource({
       url: url,
-      format: new GeoJSON({dataProjection: 'EPSG:2056', featureProjection: 'EPSG:2056'}),
+      format: new GeoJSON({dataProjection: 'EPSG:2056', featureProjection: 'EPSG:3857'}),
       wrapX: true,
     }),
     style,
@@ -77,17 +62,11 @@ const layers = [
 });
 
 const map = new Map({
-  layers: [tileLayer, ...layers],
+  layers: [osm, ...layers],
   target: 'map',
-  // view: new View({
-  //   center: [843060.4096853775, 6033263.012624491],
-  //   zoom: 12.40203575668279,
-  // }),
   view: new View({
-    // center: transform([8.23, 46.86], 'EPSG:4326', 'EPSG:2056'),
-    center: [2611312.6515792697, 1267175.5072167374],
-    projection: 'EPSG:2056',
-    zoom: 13.6,
+    center: [843060.4096853775, 6033263.012624491],
+    zoom: 12.40203575668279,
   }),
 });
 
